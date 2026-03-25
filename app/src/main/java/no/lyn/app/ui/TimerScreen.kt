@@ -1,5 +1,6 @@
 package no.lyn.app.ui
 
+import android.content.Intent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -11,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,24 +23,23 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import no.lyn.app.*
-import no.lyn.app.data.AppDatabase
-import no.lyn.app.data.Measurement
+import no.lyn.app.R
 import no.lyn.app.ui.theme.*
 import java.util.Locale
 
 @Composable
 fun TimerScreen(
-    database: AppDatabase,
-    // State hoisted to LynApp so it survives tab switching
     flashTime: Long?,
     elapsedSeconds: Double?,
+    sessionDistances: List<Double>,
     onTap: () -> Unit,
     onReset: () -> Unit,
 ) {
@@ -79,6 +80,9 @@ fun TimerScreen(
                     val distanceKm = secondsToKm(secs)
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         ResultCard(seconds = secs, distanceKm = distanceKm)
+                        AnimatedVisibility(visible = sessionDistances.size >= 2) {
+                            StormTrendCard(sessionDistances)
+                        }
                         SafetyCard(safetyInfo = getSafetyInfo(distanceKm))
                     }
                 }
@@ -105,7 +109,7 @@ fun AppHeader() {
                 fontWeight = FontWeight.ExtraBold,
             )
         }
-        Text("Lightning Distance Tracker", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+        Text(stringResource(R.string.app_subtitle), style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
     }
 }
 
@@ -134,15 +138,15 @@ fun TimerSection(
     )
 
     val buttonColor = when {
-        isWaiting         -> LightningGold
+        isWaiting          -> LightningGold
         elapsedSeconds != null -> ElectricBlue
-        else              -> LightningYellow
+        else               -> LightningYellow
     }
 
     val instructionText = when {
-        isWaiting              -> "Tap when you hear the THUNDER"
-        elapsedSeconds != null -> "Tap again to measure a new strike"
-        else                   -> "Tap when you see the LIGHTNING"
+        isWaiting              -> stringResource(R.string.tap_thunder)
+        elapsedSeconds != null -> stringResource(R.string.tap_again)
+        else                   -> stringResource(R.string.tap_flash)
     }
 
     Column(
@@ -190,9 +194,9 @@ fun TimerSection(
                 border = BorderStroke(1.dp, StormBorder),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
             ) {
-                Icon(Icons.Filled.Refresh, "Reset", modifier = Modifier.size(16.dp))
+                Icon(Icons.Filled.Refresh, null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Reset")
+                Text(stringResource(R.string.reset))
             }
         }
     }
@@ -200,29 +204,75 @@ fun TimerSection(
 
 @Composable
 fun ResultCard(seconds: Double, distanceKm: Double) {
+    val context = LocalContext.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = StormCard),
         border = BorderStroke(1.dp, StormBorder),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            ResultMetric("%.1f".format(seconds), "seconds", "Time", ElectricBlue)
-            VerticalDivider(modifier = Modifier.height(60.dp), color = StormBorder)
-            ResultMetric("%.1f".format(distanceKm), "km", "Distance", LightningYellow)
-            VerticalDivider(modifier = Modifier.height(60.dp), color = StormBorder)
-            ResultMetric("%.1f".format(distanceKm * 0.621371), "miles", "Distance", ElectricPurple)
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                ResultMetric(
+                    value = "%.1f".format(seconds),
+                    unit = stringResource(R.string.label_seconds),
+                    label = stringResource(R.string.label_time),
+                    color = ElectricBlue,
+                )
+                VerticalDivider(modifier = Modifier.height(60.dp), color = StormBorder)
+                ResultMetric(
+                    value = "%.1f".format(distanceKm),
+                    unit = "km",
+                    label = stringResource(R.string.label_distance),
+                    color = LightningYellow,
+                )
+                VerticalDivider(modifier = Modifier.height(60.dp), color = StormBorder)
+                ResultMetric(
+                    value = "%.1f".format(distanceKm * 0.621371),
+                    unit = "miles",
+                    label = stringResource(R.string.label_distance),
+                    color = ElectricPurple,
+                )
+            }
+            // Share row
+            HorizontalDivider(color = StormBorder)
+            TextButton(
+                onClick = {
+                    val safety = getSafetyInfo(distanceKm)
+                    val text = context.getString(
+                        R.string.share_text,
+                        "%.1f".format(seconds),
+                        "%.1f".format(distanceKm),
+                        "${safety.emoji} ${safety.title}",
+                    )
+                    context.startActivity(
+                        Intent.createChooser(
+                            Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, text)
+                            },
+                            null,
+                        )
+                    )
+                },
+                modifier = Modifier.align(Alignment.End),
+            ) {
+                Icon(Icons.Filled.Share, null, modifier = Modifier.size(16.dp), tint = TextSecondary)
+                Spacer(Modifier.width(4.dp))
+                Text(stringResource(R.string.share), color = TextSecondary)
+            }
         }
     }
 }
 
 @Composable
-fun ResultMetric(value: String, unit: String, label: String, color: androidx.compose.ui.graphics.Color) {
+fun ResultMetric(value: String, unit: String, label: String, color: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = TextSecondary)
         Text(value, style = MaterialTheme.typography.headlineMedium, color = color, fontWeight = FontWeight.Bold)
@@ -231,7 +281,61 @@ fun ResultMetric(value: String, unit: String, label: String, color: androidx.com
 }
 
 @Composable
-fun SafetyCard(safetyInfo: no.lyn.app.SafetyInfo) {
+fun StormTrendCard(distancesKm: List<Double>) {
+    val trend = getStormTrend(distancesKm)
+    val (label, borderColor) = when (trend) {
+        StormTrend.APPROACHING -> stringResource(R.string.trend_approaching) to DangerOrange
+        StormTrend.RETREATING  -> stringResource(R.string.trend_retreating)  to SafeGreen
+        StormTrend.STABLE      -> stringResource(R.string.trend_stable)      to CautionYellow
+        StormTrend.UNKNOWN     -> stringResource(R.string.trend_unknown)     to StormBorder
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = StormCard),
+        border = BorderStroke(1.5.dp, borderColor.copy(alpha = 0.6f)),
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                stringResource(R.string.trend_section),
+                style = MaterialTheme.typography.labelLarge,
+                color = TextSecondary,
+            )
+            Text(label, style = MaterialTheme.typography.titleMedium, color = borderColor, fontWeight = FontWeight.SemiBold)
+
+            // Mini distance timeline
+            if (distancesKm.size >= 2) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        stringResource(R.string.trend_last_measurements) + ":",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                    )
+                    distancesKm.takeLast(4).forEachIndexed { index, dist ->
+                        if (index > 0) {
+                            Text("→", color = TextSecondary, fontSize = 11.sp)
+                        }
+                        Text(
+                            "%.1f".format(dist),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (index == distancesKm.takeLast(4).lastIndex) borderColor else TextSecondary,
+                            fontWeight = if (index == distancesKm.takeLast(4).lastIndex) FontWeight.Bold else FontWeight.Normal,
+                        )
+                    }
+                    Text("km", color = TextSecondary, fontSize = 11.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SafetyCard(safetyInfo: SafetyInfo) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -263,7 +367,7 @@ fun FactsSection() {
     val pagerState = rememberPagerState(pageCount = { LIGHTNING_FACTS.size })
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Lightning Facts", style = MaterialTheme.typography.titleMedium, color = TextSecondary, fontWeight = FontWeight.SemiBold)
+        Text(stringResource(R.string.section_facts), style = MaterialTheme.typography.titleMedium, color = TextSecondary, fontWeight = FontWeight.SemiBold)
 
         HorizontalPager(
             state = pagerState,
@@ -288,7 +392,7 @@ fun FactsSection() {
 }
 
 @Composable
-fun FactCard(fact: no.lyn.app.LightningFact) {
+fun FactCard(fact: LightningFact) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),

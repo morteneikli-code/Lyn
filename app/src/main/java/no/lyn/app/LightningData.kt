@@ -13,6 +13,23 @@ data class SafetyInfo(
 
 enum class SafetyLevel { EXTREME_DANGER, DANGER, CAUTION, LOW_RISK }
 
+enum class StormTrend { APPROACHING, RETREATING, STABLE, UNKNOWN }
+
+/**
+ * Derives trend from a list of distance-km values collected in one session.
+ * Needs at least 2 measurements; uses the window of the last 3.
+ * Threshold 0.3 km avoids noise from measurement imprecision.
+ */
+fun getStormTrend(distancesKm: List<Double>): StormTrend {
+    if (distancesKm.size < 2) return StormTrend.UNKNOWN
+    val window = distancesKm.takeLast(3)
+    return when {
+        window.last() - window.first() < -0.3 -> StormTrend.APPROACHING
+        window.last() - window.first() >  0.3 -> StormTrend.RETREATING
+        else                                   -> StormTrend.STABLE
+    }
+}
+
 fun getSafetyInfo(distanceKm: Double): SafetyInfo = when {
     distanceKm < 3.0 -> SafetyInfo(
         level = SafetyLevel.EXTREME_DANGER,

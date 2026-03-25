@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import no.lyn.app.R
 import no.lyn.app.data.AppDatabase
 import no.lyn.app.data.Measurement
 import no.lyn.app.getSafetyInfo
@@ -84,16 +86,16 @@ fun HistoryScreen(database: AppDatabase) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
             containerColor = StormCard,
-            title = { Text("Clear all history?", color = TextPrimary) },
-            text = { Text("This cannot be undone.", color = TextSecondary) },
+            title = { Text(stringResource(R.string.history_clear_title), color = TextPrimary) },
+            text = { Text(stringResource(R.string.history_clear_body), color = TextSecondary) },
             confirmButton = {
                 TextButton(onClick = {
                     scope.launch { dao.deleteAll() }
                     showClearDialog = false
-                }) { Text("Clear", color = DangerRed) }
+                }) { Text(stringResource(R.string.history_clear), color = DangerRed) }
             },
             dismissButton = {
-                TextButton(onClick = { showClearDialog = false }) { Text("Cancel", color = TextSecondary) }
+                TextButton(onClick = { showClearDialog = false }) { Text(stringResource(R.string.history_cancel), color = TextSecondary) }
             },
         )
     }
@@ -116,11 +118,11 @@ private fun SummaryRow(measurements: List<Measurement>) {
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            SummaryStat("${measurements.size}", "Measurements")
+            SummaryStat("${measurements.size}", stringResource(R.string.history_count))
             VerticalDivider(modifier = Modifier.height(40.dp), color = StormBorder)
-            SummaryStat("%.1f km".format(avgDist), "Avg distance")
+            SummaryStat("%.1f km".format(avgDist), stringResource(R.string.history_avg))
             VerticalDivider(modifier = Modifier.height(40.dp), color = StormBorder)
-            SummaryStat("%.1f km".format(closest), "Closest")
+            SummaryStat("%.1f km".format(closest), stringResource(R.string.history_closest))
         }
     }
 }
@@ -192,9 +194,9 @@ private fun EmptyHistoryState() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(Icons.Filled.HistoryToggleOff, null, tint = StormBorder, modifier = Modifier.size(64.dp))
-            Text("No measurements yet", style = MaterialTheme.typography.titleMedium, color = TextSecondary)
+            Text(stringResource(R.string.history_empty), style = MaterialTheme.typography.titleMedium, color = TextSecondary)
             Text(
-                "Tap the lightning button on the\nTimer tab to get started",
+                stringResource(R.string.history_empty_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = StormBorder,
                 textAlign = TextAlign.Center,

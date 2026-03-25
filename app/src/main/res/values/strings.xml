@@ -1,4 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Lyn</string>
+    <string name="app_subtitle">Lightning Distance Tracker</string>
+
+    <!-- Timer -->
+    <string name="tap_flash">Tap when you see the LIGHTNING</string>
+    <string name="tap_thunder">Tap when you hear the THUNDER</string>
+    <string name="tap_again">Tap again to measure a new strike</string>
+    <string name="reset">Reset</string>
+    <string name="label_time">Time</string>
+    <string name="label_seconds">seconds</string>
+    <string name="label_distance">Distance</string>
+    <string name="section_facts">Lightning Facts</string>
+    <string name="share">Share</string>
+    <string name="share_text">⚡ %1$s s — %2$s km away\nSafety: %3$s\nMeasured with Lyn</string>
+
+    <!-- Storm trend -->
+    <string name="trend_section">Storm Trend</string>
+    <string name="trend_approaching">Storm approaching ↑</string>
+    <string name="trend_retreating">Storm retreating ↓</string>
+    <string name="trend_stable">Holding distance →</string>
+    <string name="trend_unknown">Measure again to see trend</string>
+    <string name="trend_last_measurements">Last measurements</string>
+
+    <!-- Navigation -->
+    <string name="nav_timer">Timer</string>
+    <string name="nav_history">History</string>
+    <string name="nav_map">Live Map</string>
+
+    <!-- History -->
+    <string name="history_clear_title">Clear all history?</string>
+    <string name="history_clear_body">This cannot be undone.</string>
+    <string name="history_clear">Clear</string>
+    <string name="history_cancel">Cancel</string>
+    <string name="history_empty">No measurements yet</string>
+    <string name="history_empty_hint">Tap the lightning button on the Timer tab to get started</string>
+    <string name="history_count">Measurements</string>
+    <string name="history_avg">Avg distance</string>
+    <string name="history_closest">Closest</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">Lightning Alerts</string>
+    <string name="notif_channel_desc">Alerts when lightning is detected nearby</string>
+    <string name="notif_title">⚡ Lightning nearby!</string>
+    <string name="notif_text">Strike detected %1$s km away. Seek shelter!</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Shows your last lightning measurement</string>
+    <string name="widget_measure">Measure</string>
+    <string name="widget_last">last measurement</string>
+    <string name="widget_tap">Tap to open</string>
 </resources>

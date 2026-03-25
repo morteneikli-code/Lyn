@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_subtitle">Avstandsmåler for lyn og torden</string>
+
+    <!-- Timer -->
+    <string name="tap_flash">Trykk når du ser LYNET</string>
+    <string name="tap_thunder">Trykk når du hører TORDENEN</string>
+    <string name="tap_again">Trykk igjen for å måle nytt nedslag</string>
+    <string name="reset">Nullstill</string>
+    <string name="label_time">Tid</string>
+    <string name="label_seconds">sekunder</string>
+    <string name="label_distance">Avstand</string>
+    <string name="section_facts">Lynfakta</string>
+    <string name="share">Del</string>
+    <string name="share_text">⚡ %1$s s — %2$s km unna\nSikkerhet: %3$s\nMålt med Lyn</string>
+
+    <!-- Storm trend -->
+    <string name="trend_section">Stormtrend</string>
+    <string name="trend_approaching">Storm nærmer seg ↑</string>
+    <string name="trend_retreating">Storm trekker seg unna ↓</string>
+    <string name="trend_stable">Storm holder avstand →</string>
+    <string name="trend_unknown">Mål igjen for å se trenden</string>
+    <string name="trend_last_measurements">Siste målinger</string>
+
+    <!-- Navigation -->
+    <string name="nav_timer">Måler</string>
+    <string name="nav_history">Historikk</string>
+    <string name="nav_map">Kart</string>
+
+    <!-- History -->
+    <string name="history_clear_title">Slett all historikk?</string>
+    <string name="history_clear_body">Kan ikke angres.</string>
+    <string name="history_clear">Slett</string>
+    <string name="history_cancel">Avbryt</string>
+    <string name="history_empty">Ingen målinger ennå</string>
+    <string name="history_empty_hint">Trykk på lynet i Måler-fanen for å komme i gang</string>
+    <string name="history_count">Målinger</string>
+    <string name="history_avg">Snittavstand</string>
+    <string name="history_closest">Nærmest</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">Lynvarsler</string>
+    <string name="notif_channel_desc">Varsler når lyn registreres i nærheten</string>
+    <string name="notif_title">⚡ Lyn i nærheten!</string>
+    <string name="notif_text">Lynnedslag %1$s km unna. Søk ly!</string>
+
+    <!-- Widget -->
+    <string name="widget_description">Viser siste lynmåling</string>
+    <string name="widget_measure">Mål lyn</string>
+    <string name="widget_last">siste måling</string>
+    <string name="widget_tap">Trykk for å åpne</string>
+</resources>

@@ -1,9 +1,14 @@
 package no.lyn.app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -15,6 +20,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -27,10 +35,10 @@ import no.lyn.app.data.Measurement
 import no.lyn.app.ui.*
 import no.lyn.app.ui.theme.*
 
-sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
-    object Timer   : Screen("timer",   "Timer",   Icons.Filled.ElectricBolt)
-    object History : Screen("history", "History", Icons.Filled.History)
-    object Map     : Screen("map",     "Live Map",Icons.Filled.Map)
+sealed class Screen(val route: String, val labelRes: Int, val icon: ImageVector) {
+    object Timer   : Screen("timer",   R.string.nav_timer,   Icons.Filled.ElectricBolt)
+    object History : Screen("history", R.string.nav_history, Icons.Filled.History)
+    object Map     : Screen("map",     R.string.nav_map,     Icons.Filled.Map)
 }
 
 val screens = listOf(Screen.Timer, Screen.History, Screen.Map)
@@ -38,6 +46,7 @@ val screens = listOf(Screen.Timer, Screen.History, Screen.Map)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NotificationHelper.createChannel(this)
         enableEdgeToEdge()
         setContent {
             LynTheme {
@@ -53,10 +62,27 @@ fun LynApp(database: AppDatabase) {
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentDestination = currentBackStack?.destination
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    // Request notification permission on Android 13+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        val notifLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { /* result ignored — app works fine without it */ }
+        LaunchedEffect(Unit) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
 
     // Timer state hoisted here so it survives tab navigation
     var flashTime by rememberSaveable { mutableStateOf<Long?>(null) }
     var elapsedSeconds by rememberSaveable { mutableStateOf<Double?>(null) }
+    // Session distances reset when the app restarts; kept across tab switches
+    var sessionDistances by remember { mutableStateOf(listOf<Double>()) }
 
     Scaffold(
         containerColor = StormBlack,
@@ -64,9 +90,7 @@ fun LynApp(database: AppDatabase) {
             NavigationBar(containerColor = StormDeep, tonalElevation = 0.dp) {
                 screens.forEach { screen ->
                     val selected = currentDestination
-                        ?.hierarchy
-                        ?.any { it.route == screen.route } == true
-
+                        ?.hierarchy?.any { it.route == screen.route } == true
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
@@ -76,8 +100,8 @@ fun LynApp(database: AppDatabase) {
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(screen.icon, contentDescription = screen.label) },
-                        label = { Text(screen.label) },
+                        icon = { Icon(screen.icon, contentDescription = null) },
+                        label = { Text(stringResource(screen.labelRes)) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = LightningYellow,
                             selectedTextColor = LightningYellow,
@@ -99,9 +123,9 @@ fun LynApp(database: AppDatabase) {
         ) {
             composable(Screen.Timer.route) {
                 TimerScreen(
-                    database = database,
                     flashTime = flashTime,
                     elapsedSeconds = elapsedSeconds,
+                    sessionDistances = sessionDistances,
                     onTap = {
                         val now = System.currentTimeMillis()
                         if (flashTime == null) {
@@ -111,9 +135,9 @@ fun LynApp(database: AppDatabase) {
                             val secs = (now - flashTime!!) / 1000.0
                             elapsedSeconds = secs
                             flashTime = null
-                            // Persist to history
                             scope.launch {
                                 val dist = secondsToKm(secs)
+                                sessionDistances = sessionDistances + dist
                                 database.measurementDao().insert(
                                     Measurement(
                                         timestamp = now,
@@ -122,6 +146,7 @@ fun LynApp(database: AppDatabase) {
                                         safetyLevel = getSafetyInfo(dist).level,
                                     )
                                 )
+                                LynWidget.onMeasurementSaved(context, dist)
                             }
                         }
                     },

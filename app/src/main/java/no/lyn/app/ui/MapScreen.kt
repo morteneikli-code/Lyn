@@ -77,6 +77,11 @@ fun MapScreen(vm: MapViewModel = viewModel()) {
     LaunchedEffect(strikes) {
         strikeOverlay.setStrikes(strikes)
         mapView.invalidate()
+        // Feed user position into VM so it can check for nearby strikes
+        locationOverlay.value?.myLocation?.let { loc ->
+            vm.updateUserLocation(loc.latitude, loc.longitude)
+            vm.checkNearbyStrikes(context, strikes)
+        }
     }
 
     LaunchedEffect(hasLocation) {
