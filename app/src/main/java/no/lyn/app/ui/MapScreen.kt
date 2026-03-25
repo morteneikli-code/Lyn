@@ -6,9 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ElectricBolt
@@ -18,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -71,25 +68,22 @@ fun MapScreen(vm: MapViewModel = viewModel()) {
         }
     }
 
-    // Request permission automatically when screen first opens
     LaunchedEffect(Unit) {
         if (!hasLocation) {
             permLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
-    // Update strike overlay whenever data changes
     LaunchedEffect(strikes) {
         strikeOverlay.setStrikes(strikes)
         mapView.invalidate()
     }
 
-    // Enable location overlay and center on first GPS fix when permission is granted
     LaunchedEffect(hasLocation) {
         if (hasLocation) {
             val locOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), mapView)
             locOverlay.enableMyLocation()
-            // runOnFirstFix runs on a background thread — post to main thread for UI ops
+            // runOnFirstFix callback runs on a background thread
             locOverlay.runOnFirstFix {
                 mapView.post {
                     mapView.controller.animateTo(locOverlay.myLocation)
@@ -103,7 +97,6 @@ fun MapScreen(vm: MapViewModel = viewModel()) {
         }
     }
 
-    // Respect OSMDroid lifecycle
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
@@ -191,13 +184,7 @@ private fun MapStatusBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Status dot
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(if (isConnected) SafeGreen else DangerRed)
-            )
+            ColorDot(color = if (isConnected) SafeGreen else DangerRed)
             Icon(Icons.Filled.ElectricBolt, null, tint = LightningYellow, modifier = Modifier.size(16.dp))
             Text(
                 text = if (isConnected) "$recent strikes / 10 min  •  ${strikes.size} total (30 min)"
@@ -232,7 +219,7 @@ private fun StrikeLegend() {
 @Composable
 private fun LegendRow(color: Color, label: String) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(color))
+        ColorDot(color = color)
         Text(text = label, style = MaterialTheme.typography.labelLarge, color = TextSecondary, fontSize = 11.sp)
     }
 }

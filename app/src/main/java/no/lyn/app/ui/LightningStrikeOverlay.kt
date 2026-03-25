@@ -17,6 +17,12 @@ class LightningStrikeOverlay : Overlay() {
     @Volatile
     private var strikes: List<LightningStrike> = emptyList()
 
+    // Pre-computed opaque base colors — alpha is set separately per-strike via Paint.alpha,
+    // avoiding Triple/object allocation inside the per-frame draw loop.
+    private val colorYoung = Color.rgb(255, 214, 10)
+    private val colorMid   = Color.rgb(255, 140,  0)
+    private val colorOld   = Color.rgb(255,  68, 68)
+
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
     private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
 
@@ -31,30 +37,26 @@ class LightningStrikeOverlay : Overlay() {
 
         for (strike in strikes) {
             val ageMin = (now - strike.timeMs) / 60_000.0
+            if (ageMin >= 30) continue
 
-            val alpha = when {
-                ageMin < 3  -> 255
-                ageMin < 15 -> (255 * (1.0 - (ageMin - 3) / 12.0)).toInt().coerceIn(60, 255)
-                ageMin < 30 -> (255 * (1.0 - (ageMin - 15) / 15.0)).toInt().coerceIn(0, 60)
-                else        -> continue
-            }
-
-            val (r, g, b) = when {
-                ageMin < 5  -> Triple(255, 214, 10)  // electric yellow
-                ageMin < 15 -> Triple(255, 140, 0)   // orange
-                else        -> Triple(255, 68,  68)  // red
+            val baseColor: Int
+            val alpha: Int
+            when {
+                ageMin < 3  -> { baseColor = colorYoung; alpha = 255 }
+                ageMin < 15 -> { baseColor = colorMid;   alpha = (255 * (1.0 - (ageMin - 3) / 12.0)).toInt().coerceIn(60, 255) }
+                else        -> { baseColor = colorOld;   alpha = (255 * (1.0 - (ageMin - 15) / 15.0)).toInt().coerceIn(0, 60) }
             }
 
             val point = projection.toPixels(GeoPoint(strike.lat, strike.lon), null)
             val px = point.x.toFloat()
             val py = point.y.toFloat()
 
-            // Soft glow halo
-            glowPaint.color = Color.argb(alpha / 5, r, g, b)
+            glowPaint.color = baseColor
+            glowPaint.alpha = alpha / 5
             canvas.drawCircle(px, py, 10f, glowPaint)
 
-            // Core dot
-            fillPaint.color = Color.argb(alpha, r, g, b)
+            fillPaint.color = baseColor
+            fillPaint.alpha = alpha
             canvas.drawCircle(px, py, 3.5f, fillPaint)
         }
     }

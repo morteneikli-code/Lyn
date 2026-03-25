@@ -243,7 +243,7 @@ fun SafetyCard(safetyInfo: no.lyn.app.SafetyInfo) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Box(modifier = Modifier.size(12.dp).clip(CircleShape).background(safetyInfo.color))
+                ColorDot(color = safetyInfo.color, size = 12.dp)
                 Text(
                     "${safetyInfo.emoji} ${safetyInfo.title}",
                     style = MaterialTheme.typography.titleMedium,

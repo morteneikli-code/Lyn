@@ -2,12 +2,13 @@ package no.lyn.app.data
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import no.lyn.app.SafetyLevel
 
 @Entity(tableName = "measurements")
 data class Measurement(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val timestamp: Long,    // Unix ms when measurement was saved
-    val seconds: Double,    // Time between flash and thunder
-    val distanceKm: Double, // Calculated distance
-    val safetyLevel: String, // SafetyLevel.name
+    val timestamp: Long,
+    val seconds: Double,
+    val distanceKm: Double,
+    val safetyLevel: SafetyLevel,
 )

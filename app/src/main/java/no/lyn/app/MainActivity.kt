@@ -119,7 +119,7 @@ fun LynApp(database: AppDatabase) {
                                         timestamp = now,
                                         seconds = secs,
                                         distanceKm = dist,
-                                        safetyLevel = getSafetyInfo(dist).level.name,
+                                        safetyLevel = getSafetyInfo(dist).level,
                                     )
                                 )
                             }

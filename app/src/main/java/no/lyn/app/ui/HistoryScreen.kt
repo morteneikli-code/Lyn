@@ -1,13 +1,10 @@
 package no.lyn.app.ui
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
@@ -17,13 +14,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import no.lyn.app.SafetyLevel
 import no.lyn.app.data.AppDatabase
 import no.lyn.app.data.Measurement
+import no.lyn.app.getSafetyInfo
 import no.lyn.app.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -139,12 +135,7 @@ private fun SummaryStat(value: String, label: String) {
 
 @Composable
 private fun MeasurementItem(measurement: Measurement, onDelete: () -> Unit) {
-    val safetyColor = when (SafetyLevel.valueOf(measurement.safetyLevel)) {
-        SafetyLevel.EXTREME_DANGER -> DangerRed
-        SafetyLevel.DANGER         -> DangerOrange
-        SafetyLevel.CAUTION        -> CautionYellow
-        SafetyLevel.LOW_RISK       -> SafeGreen
-    }
+    val safetyColor = getSafetyInfo(measurement.distanceKm).color
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -159,13 +150,7 @@ private fun MeasurementItem(measurement: Measurement, onDelete: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // Safety colour dot
-            Box(
-                modifier = Modifier
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(safetyColor)
-            )
+            ColorDot(color = safetyColor, size = 10.dp)
 
             // Data
             Column(modifier = Modifier.weight(1f)) {
