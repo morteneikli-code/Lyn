@@ -57,16 +57,24 @@ fun MapScreen(vm: MapViewModel = viewModel()) {
 
     // ---- Build OSMDroid MapView once ----
     val strikeOverlay = remember { LightningStrikeOverlay() }
-    val locationOverlay = remember<MyLocationNewOverlay?> { null }
+    // Keep a ref so the FAB can re-center at any time
+    val locationOverlay = remember { mutableStateOf<MyLocationNewOverlay?>(null) }
 
     val mapView = remember {
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
             controller.setZoom(4.5)
-            controller.setCenter(GeoPoint(55.0, 15.0)) // centre on Europe/Scandinavia
+            controller.setCenter(GeoPoint(55.0, 15.0)) // fallback until GPS fix
             overlays.add(strikeOverlay)
             clipToOutline = true
+        }
+    }
+
+    // Request permission automatically when screen first opens
+    LaunchedEffect(Unit) {
+        if (!hasLocation) {
+            permLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
@@ -76,13 +84,21 @@ fun MapScreen(vm: MapViewModel = viewModel()) {
         mapView.invalidate()
     }
 
-    // Enable location overlay when permission granted
+    // Enable location overlay and center on first GPS fix when permission is granted
     LaunchedEffect(hasLocation) {
         if (hasLocation) {
             val locOverlay = MyLocationNewOverlay(GpsMyLocationProvider(context), mapView)
             locOverlay.enableMyLocation()
+            // runOnFirstFix runs on a background thread — post to main thread for UI ops
+            locOverlay.runOnFirstFix {
+                mapView.post {
+                    mapView.controller.animateTo(locOverlay.myLocation)
+                    mapView.controller.setZoom(8.0)
+                }
+            }
             mapView.overlays.removeAll { it is MyLocationNewOverlay }
             mapView.overlays.add(locOverlay)
+            locationOverlay.value = locOverlay
             mapView.invalidate()
         }
     }
@@ -133,10 +149,11 @@ fun MapScreen(vm: MapViewModel = viewModel()) {
             FloatingActionButton(
                 onClick = {
                     if (hasLocation) {
-                        // Try to center on user location
-                        val loc = (mapView.overlays.filterIsInstance<MyLocationNewOverlay>()
-                            .firstOrNull())?.myLocation
-                        if (loc != null) mapView.controller.animateTo(GeoPoint(loc))
+                        val loc = locationOverlay.value?.myLocation
+                        if (loc != null) {
+                            mapView.controller.animateTo(loc)
+                            mapView.controller.setZoom(8.0)
+                        }
                     } else {
                         permLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     }
