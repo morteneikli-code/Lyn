@@ -34,6 +34,7 @@ class BlitzortungService {
     private var webSocket: WebSocket? = null
     private var shouldReconnect = false
     private val handler = Handler(Looper.getMainLooper())
+    private var activeListener: Listener? = null
 
     private val servers = listOf(
         "wss://ws1.blitzortung.org/",
@@ -43,28 +44,39 @@ class BlitzortungService {
 
     fun connect() {
         shouldReconnect = true
+        // Invalidate any existing listener so its onClosed/onFailure won't
+        // trigger a second reconnect after we cancel the old socket below.
+        activeListener?.isActive = false
+        webSocket?.cancel()
+        val listener = Listener()
+        activeListener = listener
         val request = Request.Builder()
             .url(servers.random())
             .build()
-        webSocket = client.newWebSocket(request, Listener())
+        webSocket = client.newWebSocket(request, listener)
     }
 
     fun disconnect() {
         shouldReconnect = false
+        activeListener?.isActive = false
         handler.removeCallbacksAndMessages(null)
-        webSocket?.close(1000, null)
+        webSocket?.cancel()
         webSocket = null
+        activeListener = null
         _isConnected.value = false
     }
 
     private inner class Listener : WebSocketListener() {
+        var isActive = true
+
         override fun onOpen(webSocket: WebSocket, response: Response) {
+            if (!isActive) return
             _isConnected.value = true
-            // Subscribe to global bounding box
             webSocket.send("""{"west":-180,"east":180,"north":90,"south":-90}""")
         }
 
         override fun onMessage(webSocket: WebSocket, text: String) {
+            if (!isActive) return
             try {
                 val json = JSONObject(text)
                 val lat = json.optDouble("lat", Double.NaN)
@@ -76,11 +88,13 @@ class BlitzortungService {
         }
 
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+            if (!isActive) return
             _isConnected.value = false
             scheduleReconnect()
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+            if (!isActive) return
             _isConnected.value = false
             scheduleReconnect()
         }

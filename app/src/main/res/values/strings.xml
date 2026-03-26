@@ -39,6 +39,16 @@
     <string name="history_avg">Avg distance</string>
     <string name="history_closest">Closest</string>
 
+    <!-- Relative time labels (history screen) -->
+    <string name="time_just_now">Just now</string>
+    <string name="time_minutes_ago">%1$d min ago</string>
+    <string name="time_hours_ago">%1$dh ago</string>
+    <string name="time_days_ago">%1$dd ago</string>
+
+    <!-- Map -->
+    <string name="map_status_connected">%1$d strikes / 10 min  •  %2$d total (30 min)</string>
+    <string name="map_status_disconnected">Disconnected from Blitzortung</string>
+
     <!-- Notifications -->
     <string name="notif_channel_name">Lightning Alerts</string>
     <string name="notif_channel_desc">Alerts when lightning is detected nearby</string>

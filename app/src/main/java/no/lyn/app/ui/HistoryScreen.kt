@@ -1,5 +1,6 @@
 package no.lyn.app.ui
 
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,7 +53,7 @@ fun HistoryScreen(database: AppDatabase) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "History",
+                text = stringResource(R.string.nav_history),
                 style = MaterialTheme.typography.headlineMedium,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
@@ -138,6 +140,7 @@ private fun SummaryStat(value: String, label: String) {
 @Composable
 private fun MeasurementItem(measurement: Measurement, onDelete: () -> Unit) {
     val safetyColor = getSafetyInfo(measurement.distanceKm).color
+    val context = LocalContext.current
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -175,7 +178,7 @@ private fun MeasurementItem(measurement: Measurement, onDelete: () -> Unit) {
                     )
                 }
                 Text(
-                    text = formatRelativeTime(measurement.timestamp),
+                    text = formatRelativeTime(measurement.timestamp, context),
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary,
                 )
@@ -205,13 +208,13 @@ private fun EmptyHistoryState() {
     }
 }
 
-private fun formatRelativeTime(timestamp: Long): String {
+private fun formatRelativeTime(timestamp: Long, context: Context): String {
     val diff = System.currentTimeMillis() - timestamp
     return when {
-        diff < 60_000        -> "Just now"
-        diff < 3_600_000     -> "${diff / 60_000} min ago"
-        diff < 86_400_000    -> "${diff / 3_600_000}h ago"
-        diff < 7 * 86_400_000L -> "${diff / 86_400_000}d ago"
+        diff < 60_000          -> context.getString(R.string.time_just_now)
+        diff < 3_600_000       -> context.getString(R.string.time_minutes_ago, diff / 60_000)
+        diff < 86_400_000      -> context.getString(R.string.time_hours_ago, diff / 3_600_000)
+        diff < 7 * 86_400_000L -> context.getString(R.string.time_days_ago, diff / 86_400_000)
         else -> SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(timestamp))
     }
 }

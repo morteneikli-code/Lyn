@@ -65,16 +65,16 @@ fun LynApp(database: AppDatabase) {
     val context = LocalContext.current
 
     // Request notification permission on Android 13+
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        val notifLauncher = rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { /* result ignored — app works fine without it */ }
-        LaunchedEffect(Unit) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+    // Launcher must be registered unconditionally — Compose rules forbid conditional remember calls.
+    val notifLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* result ignored — app works fine without it */ }
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED
-            ) {
-                notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
+        ) {
+            notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -153,6 +153,7 @@ fun LynApp(database: AppDatabase) {
                     onReset = {
                         flashTime = null
                         elapsedSeconds = null
+                        sessionDistances = emptyList()
                     },
                 )
             }

@@ -38,6 +38,16 @@
     <string name="history_avg">Snittavstand</string>
     <string name="history_closest">Nærmest</string>
 
+    <!-- Relative time labels (history screen) -->
+    <string name="time_just_now">Akkurat nå</string>
+    <string name="time_minutes_ago">%1$d min siden</string>
+    <string name="time_hours_ago">%1$d t siden</string>
+    <string name="time_days_ago">%1$d d siden</string>
+
+    <!-- Map -->
+    <string name="map_status_connected">%1$d nedslag / 10 min  •  %2$d totalt (30 min)</string>
+    <string name="map_status_disconnected">Frakoblet fra Blitzortung</string>
+
     <!-- Notifications -->
     <string name="notif_channel_name">Lynvarsler</string>
     <string name="notif_channel_desc">Varsler når lyn registreres i nærheten</string>

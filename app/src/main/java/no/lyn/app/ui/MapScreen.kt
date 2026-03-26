@@ -27,6 +27,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.res.stringResource
+import no.lyn.app.R
 import no.lyn.app.data.LightningStrike
 import no.lyn.app.ui.theme.*
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -192,8 +194,8 @@ private fun MapStatusBar(
             ColorDot(color = if (isConnected) SafeGreen else DangerRed)
             Icon(Icons.Filled.ElectricBolt, null, tint = LightningYellow, modifier = Modifier.size(16.dp))
             Text(
-                text = if (isConnected) "$recent strikes / 10 min  •  ${strikes.size} total (30 min)"
-                       else "Disconnected from Blitzortung",
+                text = if (isConnected) stringResource(R.string.map_status_connected, recent, strikes.size)
+                       else stringResource(R.string.map_status_disconnected),
                 style = MaterialTheme.typography.labelLarge,
                 color = TextPrimary,
             )
