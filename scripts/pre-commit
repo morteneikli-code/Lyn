@@ -1,0 +1,14 @@
+#!/bin/bash
+# Pre-commit hook — Pillar 3: Trust But Verify
+# Kjør: ./scripts/setup-hooks.sh for å installere
+
+set -e
+
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17
+export PATH="$JAVA_HOME/bin:$PATH"
+
+echo "⚡ Kjører unit-tester før commit..."
+./gradlew test --console=plain -q
+
+echo "✅ Alle tester passerte."
