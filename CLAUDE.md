@@ -1,116 +1,83 @@
 # Lyn
 
-## What Is This
+Android app for måling av avstand til tordenvær via flash-til-torden-timer, med live lynkart og stormtrend-sporing.
 
-Android app for measuring distance to a thunderstorm by timing the gap between flash and thunder, with a live lightning map and storm-trend tracking.
-
-**Type:** Android app
-**Language:** Kotlin (Jetpack Compose UI)
-**Build:** `./gradlew assembleDebug` · `./gradlew test`
+**Stack:** Kotlin · Jetpack Compose · Material 3 · Room · OkHttp WebSocket · osmdroid
+**Package:** `no.lyn.app` · minSdk 26 · targetSdk 35 · JVM 11
 
 ---
 
 ## Quick Start
 
 ```bash
-# Build (debug APK)
-./gradlew assembleDebug
-
-# Unit tests
-./gradlew test
-
-# Instrumented tests (device/emulator required)
-./gradlew connectedAndroidTest
-
-# Install on a connected device/emulator
-./gradlew installDebug
-```
-
-App ID: `no.lyn.app` · minSdk 26 · targetSdk 35 · JVM target 11.
-
----
-
-## Project Structure
-
-```
-Lyn/
-  app/
-    src/main/
-      java/no/lyn/app/
-        MainActivity.kt            Compose nav host, three screens: Timer / History / Map
-        LynApplication.kt          Application + Room DB singleton
-        LightningData.kt           Pure functions: secondsToKm, getStormTrend, getSafetyInfo
-        LynWidget.kt               Home-screen widget
-        NotificationHelper.kt      Channel + notifications
-        data/
-          AppDatabase.kt           Room database
-          MeasurementDao.kt        DAO for stored measurements
-          Measurement.kt           @Entity: id, timestamp, seconds, distanceKm, safetyLevel
-          Converters.kt            Room type converters
-          BlitzortungService.kt    OkHttp WebSocket client (live strike feed)
-        ui/
-          TimerScreen.kt           Tap to start/stop, shows distance + safety level
-          HistoryScreen.kt         Past measurements (Room-backed)
-          MapScreen.kt             osmdroid map with live strikes
-          MapViewModel.kt          Map state + Blitzortung connection
-          LightningStrikeOverlay.kt
-          Components.kt            Shared composables
-      res/
-        values/strings.xml         English (default)
-        values-nb/strings.xml      Norwegian (Bokmål)
-        xml/widget_info.xml
-        drawable/, layout/, etc.
-  gradle/libs.versions.toml        Version catalog (single source for deps)
+./gradlew assembleDebug        # bygg APK
+./gradlew test                 # unit-tester (kjører uten enhet)
+./gradlew installDebug         # installer på tilkoblet enhet/emulator
+./gradlew connectedAndroidTest # instrumenterte tester (krever enhet)
 ```
 
 ---
 
-## Key Conventions
+## Prosjektstruktur
 
-**Stack:**
-- UI: Jetpack Compose + Material 3 (no XML layouts except widget)
-- Navigation: navigation-compose with sealed `Screen` class in `MainActivity.kt`
-- Persistence: Room with KSP code generation
-- Network: OkHttp WebSocket against Blitzortung
-- Map: osmdroid (OpenStreetMap tiles)
-
-**Code style:**
-- Code, comments, log strings: English
-- User-facing strings: `strings.xml` (English) + `values-nb/strings.xml` (Norwegian). Never hard-code UI strings.
-- Pure functions where possible — see `LightningData.kt` (`secondsToKm`, `getStormTrend`, `getSafetyInfo`)
-- Data classes for models; `enum class` for closed sets (`SafetyLevel`, `StormTrend`)
-- Dependencies referenced through the version catalog (`libs.xxx`), not raw coordinates
-
-**Physics constants:**
-- Speed of sound ≈ 343 m/s → `seconds / 2.915` km. If you change this, also update the documentation comment in `LightningData.kt`.
-
-**Safety thresholds** (`getSafetyInfo`): `<3 km` extreme · `<6 km` danger · `<10 km` caution · else low risk. These map to UI colors and notification text.
+```
+app/src/main/java/no/lyn/app/
+  MainActivity.kt          Nav-host, tre skjermer: Timer / History / Map
+  LightningData.kt         Pure functions — secondsToKm, getStormTrend, getSafetyInfo
+  LynApplication.kt        Application-klasse, Room-singleton, osmdroid-init
+  LynWidget.kt             Hjemskjerm-widget (SharedPreferences, ikke Room)
+  NotificationHelper.kt    Varslingskanal + lokal push-varsling
+  data/                    AppDatabase, MeasurementDao, Measurement, BlitzortungService
+  ui/                      TimerScreen, HistoryScreen, MapScreen, MapViewModel, Components
+res/
+  values/strings.xml       Engelsk (default)
+  values-nb/strings.xml    Norsk bokmål
+  mipmap-*/                Launcher-ikoner (adaptive XML + PNG-fallbacks)
+```
 
 ---
 
-## What NOT To Do
+## Nøkkelkonvensjoner
 
-- Don't hard-code user-facing strings — add to both `values/strings.xml` and `values-nb/strings.xml`
-- Don't access the database from composables — go through a ViewModel or pass the DAO down
-- Don't add new dependencies inline in `app/build.gradle.kts` — add to `gradle/libs.versions.toml` first
-- Don't bypass Compose for new screens (widget is the only XML-layout exception)
-- Don't commit `local.properties` or anything under `/build`, `/.idea`, `.gradle` (already in `.gitignore`)
+- **Avstandsformel:** `seconds / 2.915` km (343 m/s lydhastig.). Endre bare i `LightningData.kt` + kommentar der.
+- **Sikkerhetsterskler:** `<3 km` EXTREME · `<6 km` DANGER · `<10 km` CAUTION · ellers LOW_RISK. Definisjoner i `getSafetyInfo()` — ikke dupliser disse tallene andre steder.
+- **Avhengigheter:** legg til i `gradle/libs.versions.toml` → referer via `libs.xxx` i `build.gradle.kts`. Aldri råkoordinater direkte.
+- **Strenger:** ny brukersynlig tekst går i *begge* `values/strings.xml` og `values-nb/strings.xml`.
+- **Pure functions:** logikk uten Android-avhengighet hører hjemme i `LightningData.kt` — da kan den enhetstestes uten emulator.
+
+---
+
+## Kritiske gotchas
+
+- **Widget bruker SharedPreferences, ikke Room.** Kall `LynWidget.onMeasurementSaved(context, km)` etter *enhver* lagret måling — ellers oppdateres ikke widgeten.
+- **Varsler virker bare mens kartfanen er synlig.** Det finnes ingen bakgrunnstjeneste. `MapViewModel` lever kun mens `MapScreen` er i komposisjonen.
+- **osmdroid krever deprecated API.** `LynApplication` bruker `@Suppress("DEPRECATION")` for `PreferenceManager` — osmdroid krever dette. Ikke fjern suppressionen.
+- **`dp`-import er ikke med i wildcard-import.** Legg til `import androidx.compose.ui.unit.dp` eksplisitt i alle Composable-filer som bruker `dp`.
+- **Blitzortung abonnerer globalt.** WebSocket-filteret i `BlitzortungService.onOpen()` sender `-180,180,-90,90`. Skal du filtrere regionalt, endre `send()`-kallet der.
+- **Notifikasjons-tillatelse er runtime på API 33+.** `POST_NOTIFICATIONS` er i manifest men må også requestas i kode.
+
+---
+
+## Hva du ikke skal gjøre
+
+- Ikke commit direkte til `main` — bruk feature-branch + PR (Pillar 5)
+- Ikke hardkod brukersynlige tekster — bruk `strings.xml`
+- Ikke legg databasekall i Composables — gå via ViewModel eller send DAO ned som parameter
+- Ikke legg nye avhengigheter direkte i `build.gradle.kts` — start med `libs.versions.toml`
+- Ikke dupliser sikkerhetsterskler fra `getSafetyInfo()` — de har én kilde
 
 ---
 
 ## Skills
 
-Project-specific skills: `.claude/skills/` (empty — add as patterns emerge)
+**Start her:** `~/.claude/skills/common/sdd-navigator` — finn riktig skill for oppgaven
 
-Methodology skills (global, `~/.claude/skills/common/`):
-- Entry point: `sdd-context`
-- CLAUDE.md guidance: `claude-md-guidelines`
-- Skill routing: `skill-routing-decisions`
+| Behov | Skill |
+|-------|-------|
+| Metodikk-oversikt | `sdd-context` |
+| Commit / PR-flyt | `github-workflow` |
+| Testing og verifisering | `verification-patterns` · `tdd-workflow` |
+| Noe føles galt / hallusinasjon | `fear-driven-development` |
+| Skrive første domain-skill | `sdd-domain-skill-extractor` |
 
----
-
-## Related
-
-- Default branch: `claude/new-session-9Gup8` (unusual — consider renaming to `main` before sharing)
-- Lightning data source: [Blitzortung.org](https://www.blitzortung.org/) community network (free, attribution required)
-- Map tiles: OpenStreetMap via osmdroid
+Prosjekt-spesifikke skills: `.claude/skills/` (tom — legg til når mønstre gjentas)
