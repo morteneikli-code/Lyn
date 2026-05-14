@@ -16,6 +16,8 @@ Android app for måling av avstand til tordenvær via flash-til-torden-timer, me
 ./gradlew connectedAndroidTest # instrumenterte tester (krever enhet)
 ```
 
+**Ny worktree?** `local.properties` er gitignored. Opprett den med `sdk.dir=<sti til Android-SDK>` (på denne maskinen: `/Users/morteneikli/Library/Android/sdk`) før første build.
+
 ---
 
 ## Prosjektstruktur
