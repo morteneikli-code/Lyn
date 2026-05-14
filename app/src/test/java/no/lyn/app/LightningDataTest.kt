@@ -121,4 +121,35 @@ class LightningDataTest {
         assertEquals(StormTrend.RETREATING, getStormTrend(listOf(3.0, 5.0)))
         assertEquals(StormTrend.STABLE, getStormTrend(listOf(5.0, 5.1)))
     }
+
+    // ─── factForMeasurementCount ─────────────────────────────────────────────────
+
+    @Test
+    fun `factForMeasurementCount returns first fact for zero measurements`() {
+        assertEquals(LIGHTNING_FACTS[0], factForMeasurementCount(0))
+    }
+
+    @Test
+    fun `factForMeasurementCount advances with each measurement`() {
+        assertEquals(LIGHTNING_FACTS[1], factForMeasurementCount(1))
+        assertEquals(LIGHTNING_FACTS[2], factForMeasurementCount(2))
+        assertEquals(LIGHTNING_FACTS[3], factForMeasurementCount(3))
+    }
+
+    @Test
+    fun `factForMeasurementCount wraps around past the end of the list`() {
+        val size = LIGHTNING_FACTS.size
+        // After a full cycle, we're back to fact[0]; then fact[1], etc.
+        assertEquals(LIGHTNING_FACTS[0], factForMeasurementCount(size))
+        assertEquals(LIGHTNING_FACTS[1], factForMeasurementCount(size + 1))
+        assertEquals(LIGHTNING_FACTS[0], factForMeasurementCount(size * 7))
+    }
+
+    @Test
+    fun `factForMeasurementCount handles unexpected negative input without crashing`() {
+        // Defensive: count comes from sessionDistances.size which should never be negative,
+        // but Kotlin's `mod` always returns a non-negative result, so this stays safe.
+        val result = factForMeasurementCount(-1)
+        assertEquals(LIGHTNING_FACTS[LIGHTNING_FACTS.size - 1], result)
+    }
 }
