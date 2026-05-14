@@ -1,9 +1,10 @@
 # Lyn
 
-Android app for måling av avstand til tordenvær via flash-til-torden-timer, med live lynkart og stormtrend-sporing.
+Android app for måling av avstand til tordenvær via flash-til-torden-timer. Lokal historikk, stormtrend, widget og varsel når egne målinger viser at lynet er farlig nært.
 
-**Stack:** Kotlin · Jetpack Compose · Material 3 · Room · OkHttp WebSocket · osmdroid
+**Stack:** Kotlin · Jetpack Compose · Material 3 · Room
 **Package:** `no.lyn.app` · minSdk 26 · targetSdk 35 · JVM 11
+**Filosofi:** Helt lokal — ingen nettverkskall, ingen eksterne API-er, ingen tracking. Liability-profilen er begrenset til tolkningen av brukerens egen observasjon.
 
 ---
 
@@ -24,14 +25,14 @@ Android app for måling av avstand til tordenvær via flash-til-torden-timer, me
 
 ```
 app/src/main/java/no/lyn/app/
-  MainActivity.kt          Nav-host, tre skjermer: Timer / History / Map
-  LightningData.kt         Pure functions — secondsToKm, getStormTrend, getSafetyInfo, factForMeasurementCount
+  MainActivity.kt          Nav-host, to skjermer: Timer / History
+  LightningData.kt         Pure functions — secondsToKm, getStormTrend, getSafetyInfo, factForMeasurementCount, displayTrend
   HistoryGrouping.kt       Pure functions — dag-gruppering med eksplisitt TimeZone
-  LynApplication.kt        Application-klasse, Room-singleton, osmdroid-init
+  LynApplication.kt        Application-klasse, Room-singleton
   LynWidget.kt             Hjemskjerm-widget (SharedPreferences, ikke Room)
-  NotificationHelper.kt    Varslingskanal + lokal push-varsling
-  data/                    AppDatabase, MeasurementDao, Measurement, BlitzortungService
-  ui/                      TimerScreen, HistoryScreen, MapScreen, MapViewModel, Components
+  NotificationHelper.kt    Varslingskanal + varsel når egen måling er <3 km
+  data/                    AppDatabase, MeasurementDao, Measurement
+  ui/                      TimerScreen, HistoryScreen, Components
 res/
   values/strings.xml       Engelsk (default)
   values-nb/strings.xml    Norsk bokmål
@@ -54,11 +55,10 @@ res/
 ## Kritiske gotchas
 
 - **Widget bruker SharedPreferences, ikke Room.** Kall `LynWidget.onMeasurementSaved(context, km)` etter *enhver* lagret måling — ellers oppdateres ikke widgeten.
-- **Varsler virker bare mens kartfanen er synlig.** Det finnes ingen bakgrunnstjeneste. `MapViewModel` lever kun mens `MapScreen` er i komposisjonen.
-- **osmdroid krever deprecated API.** `LynApplication` bruker `@Suppress("DEPRECATION")` for `PreferenceManager` — osmdroid krever dette. Ikke fjern suppressionen.
+- **Varsler trigges fra MainActivity, ikke en bakgrunnstjeneste.** `NotificationHelper.notifyNearbyStrike()` kalles når brukerens egen måling er under `ALERT_DISTANCE_THRESHOLD_KM` (3 km). Appen har ingen nettverkstilgang og ingen bakgrunnsovervåking.
 - **`dp`-import er ikke med i wildcard-import.** Legg til `import androidx.compose.ui.unit.dp` eksplisitt i alle Composable-filer som bruker `dp`.
-- **Blitzortung abonnerer globalt.** WebSocket-filteret i `BlitzortungService.onOpen()` sender `-180,180,-90,90`. Skal du filtrere regionalt, endre `send()`-kallet der.
 - **Notifikasjons-tillatelse er runtime på API 33+.** `POST_NOTIFICATIONS` er i manifest men må også requestas i kode.
+- **Ingen nettverk i appen.** Ingen INTERNET-permission. Hvis du legger til en API-integrasjon må du eksplisitt re-introdusere både permission og tråd-håndtering.
 
 ---
 

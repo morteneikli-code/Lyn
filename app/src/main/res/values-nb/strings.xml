@@ -26,7 +26,6 @@
     <!-- Navigation -->
     <string name="nav_timer">Måler</string>
     <string name="nav_history">Historikk</string>
-    <string name="nav_map">Kart</string>
 
     <!-- History -->
     <string name="history_clear_title">Slett all historikk?</string>
@@ -45,15 +44,11 @@
     <string name="time_hours_ago">%1$d t siden</string>
     <string name="time_days_ago">%1$d d siden</string>
 
-    <!-- Map -->
-    <string name="map_status_connected">%1$d nedslag / 10 min  •  %2$d totalt (30 min)</string>
-    <string name="map_status_disconnected">Frakoblet fra Blitzortung</string>
-
-    <!-- Notifications -->
+    <!-- Notifications (fyres når egen måling viser at stormen er i faresonen) -->
     <string name="notif_channel_name">Lynvarsler</string>
-    <string name="notif_channel_desc">Varsler når lyn registreres i nærheten</string>
+    <string name="notif_channel_desc">Varsler når målingen din viser at lyn er farlig nært</string>
     <string name="notif_title">⚡ Lyn i nærheten!</string>
-    <string name="notif_text">Lynnedslag %1$s km unna. Søk ly!</string>
+    <string name="notif_text">Målingen din viser %1$s km unna. Søk ly!</string>
 
     <!-- Widget -->
     <string name="widget_description">Viser siste lynmåling</string>

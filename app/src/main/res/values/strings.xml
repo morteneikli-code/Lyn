@@ -27,7 +27,6 @@
     <!-- Navigation -->
     <string name="nav_timer">Timer</string>
     <string name="nav_history">History</string>
-    <string name="nav_map">Live Map</string>
 
     <!-- History -->
     <string name="history_clear_title">Clear all history?</string>
@@ -46,15 +45,11 @@
     <string name="time_hours_ago">%1$dh ago</string>
     <string name="time_days_ago">%1$dd ago</string>
 
-    <!-- Map -->
-    <string name="map_status_connected">%1$d strikes / 10 min  •  %2$d total (30 min)</string>
-    <string name="map_status_disconnected">Disconnected from Blitzortung</string>
-
-    <!-- Notifications -->
+    <!-- Notifications (fired when user's own measurement shows the storm is in the danger zone) -->
     <string name="notif_channel_name">Lightning Alerts</string>
-    <string name="notif_channel_desc">Alerts when lightning is detected nearby</string>
+    <string name="notif_channel_desc">Alerts when your measurement shows lightning is dangerously close</string>
     <string name="notif_title">⚡ Lightning nearby!</string>
-    <string name="notif_text">Strike detected %1$s km away. Seek shelter!</string>
+    <string name="notif_text">Your measurement shows %1$s km away. Seek shelter!</string>
 
     <!-- Widget -->
     <string name="widget_description">Shows your last lightning measurement</string>
