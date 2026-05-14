@@ -69,6 +69,10 @@ class LightningDataTest {
 
     // ─── getStormTrend ───────────────────────────────────────────────────────────
 
+    // Trend tests below assume the distance-aware noise floor:
+    //   distance < 6 km → 1.0 km noise floor (lightning location is imprecise close-up)
+    //   distance ≥ 6 km → 0.3 km noise floor
+
     @Test
     fun `getStormTrend with empty list is unknown`() {
         assertEquals(StormTrend.UNKNOWN, getStormTrend(emptyList()))
@@ -98,10 +102,95 @@ class LightningDataTest {
     }
 
     @Test
-    fun `getStormTrend boundary at exactly -0_3 is stable`() {
-        // Threshold uses strict `<`, so a delta of exactly -0.3 is NOT approaching.
-        // Pin this so a future "<= -0.3" refactor surfaces here.
+    fun `getStormTrend close-range minor change stays stable under raised noise floor`() {
+        // At ~5 km we use the 1.0 km noise floor. A delta of -0.3 km is well inside that.
+        // (Before the close-range adjustment, this would have been APPROACHING — the new
+        // behaviour reflects that small swings close to the storm are usually measurement
+        // noise, not a real approach.)
         assertEquals(StormTrend.STABLE, getStormTrend(listOf(5.0, 4.85, 4.7)))
+    }
+
+    // ─── getStormTrend — distance-aware noise floor ─────────────────────────────
+
+    @Test
+    fun `getStormTrend close-range needs a large delta to count as approaching`() {
+        // 2.5 → 2.2 → 2.0: delta -0.5, well inside the 1.0 km noise floor → STABLE
+        assertEquals(StormTrend.STABLE, getStormTrend(listOf(2.5, 2.2, 2.0)))
+    }
+
+    @Test
+    fun `getStormTrend close-range honest approach beats the noise floor`() {
+        // 5.5 → 3.5 → 1.5: delta -4.0, way past 1.0 km → APPROACHING
+        assertEquals(StormTrend.APPROACHING, getStormTrend(listOf(5.5, 3.5, 1.5)))
+    }
+
+    @Test
+    fun `getStormTrend close-range minor retreat is suppressed as stable`() {
+        // 1.5 → 1.7 → 1.9: delta +0.4, inside 1.0 km noise → STABLE (was RETREATING under old logic)
+        assertEquals(StormTrend.STABLE, getStormTrend(listOf(1.5, 1.7, 1.9)))
+    }
+
+    @Test
+    fun `getStormTrend far-range remains sensitive to small changes`() {
+        // 12 → 11.5 → 11.0: delta -1.0 with 0.3 noise floor → APPROACHING
+        assertEquals(StormTrend.APPROACHING, getStormTrend(listOf(12.0, 11.5, 11.0)))
+        // 11 → 11.5 → 12.0: delta +1.0 → RETREATING
+        assertEquals(StormTrend.RETREATING, getStormTrend(listOf(11.0, 11.5, 12.0)))
+    }
+
+    @Test
+    fun `getStormTrend close-far boundary at 6 km uses the far noise floor`() {
+        // last = 6.0, NOT < 6 → far noise floor (0.3 km).
+        // 6.5 → 6.2 → 6.0: delta -0.5 past 0.3 → APPROACHING
+        assertEquals(StormTrend.APPROACHING, getStormTrend(listOf(6.5, 6.2, 6.0)))
+    }
+
+    @Test
+    fun `getStormTrend just below 6 km uses the close noise floor`() {
+        // last = 5.99 → close noise floor (1.0). Delta -0.5 is now just noise → STABLE.
+        assertEquals(StormTrend.STABLE, getStormTrend(listOf(6.5, 6.2, 5.99)))
+    }
+
+    // ─── displayTrend ────────────────────────────────────────────────────────────
+    // Decides what label the UI shows. RETREATING/STABLE collapse to STILL_CLOSE
+    // when the storm is still in the danger zone — never give a green/yellow signal
+    // when the safety card is still red.
+
+    @Test
+    fun `displayTrend passes APPROACHING through regardless of distance`() {
+        // Warnings of worsening conditions are always honest — never suppressed.
+        assertEquals(TrendDisplay.APPROACHING, displayTrend(StormTrend.APPROACHING, 1.0))
+        assertEquals(TrendDisplay.APPROACHING, displayTrend(StormTrend.APPROACHING, 15.0))
+    }
+
+    @Test
+    fun `displayTrend overrides RETREATING to STILL_CLOSE when in danger zone`() {
+        assertEquals(TrendDisplay.STILL_CLOSE, displayTrend(StormTrend.RETREATING, 2.0))
+        assertEquals(TrendDisplay.STILL_CLOSE, displayTrend(StormTrend.RETREATING, 5.99))
+    }
+
+    @Test
+    fun `displayTrend overrides STABLE to STILL_CLOSE when in danger zone`() {
+        assertEquals(TrendDisplay.STILL_CLOSE, displayTrend(StormTrend.STABLE, 1.5))
+    }
+
+    @Test
+    fun `displayTrend shows RETREATING normally when out of danger zone`() {
+        // Boundary uses strict `<`, so 6.0 is "far enough".
+        assertEquals(TrendDisplay.RETREATING, displayTrend(StormTrend.RETREATING, 6.0))
+        assertEquals(TrendDisplay.RETREATING, displayTrend(StormTrend.RETREATING, 15.0))
+    }
+
+    @Test
+    fun `displayTrend shows STABLE normally when out of danger zone`() {
+        assertEquals(TrendDisplay.STABLE, displayTrend(StormTrend.STABLE, 8.0))
+    }
+
+    @Test
+    fun `displayTrend passes UNKNOWN through`() {
+        // Even when no real data exists, distance shouldn't change classification.
+        assertEquals(TrendDisplay.UNKNOWN, displayTrend(StormTrend.UNKNOWN, 0.0))
+        assertEquals(TrendDisplay.UNKNOWN, displayTrend(StormTrend.UNKNOWN, 20.0))
     }
 
     @Test

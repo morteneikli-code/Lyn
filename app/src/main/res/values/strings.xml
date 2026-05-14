@@ -21,6 +21,7 @@
     <string name="trend_retreating">Storm retreating ↓</string>
     <string name="trend_stable">Holding distance →</string>
     <string name="trend_unknown">Measure again to see trend</string>
+    <string name="trend_still_close">Still close — stay sheltered</string>
     <string name="trend_last_measurements">Last measurements</string>
 
     <!-- Navigation -->

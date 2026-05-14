@@ -20,6 +20,7 @@
     <string name="trend_retreating">Storm trekker seg unna ↓</string>
     <string name="trend_stable">Storm holder avstand →</string>
     <string name="trend_unknown">Mål igjen for å se trenden</string>
+    <string name="trend_still_close">Fortsatt nært — bli i ly</string>
     <string name="trend_last_measurements">Siste målinger</string>
 
     <!-- Navigation -->

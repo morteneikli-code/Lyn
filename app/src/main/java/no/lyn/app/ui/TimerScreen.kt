@@ -291,11 +291,13 @@ fun ResultMetric(value: String, unit: String, label: String, color: Color) {
 @Composable
 fun StormTrendCard(distancesKm: List<Double>) {
     val trend = getStormTrend(distancesKm)
-    val (label, borderColor) = when (trend) {
-        StormTrend.APPROACHING -> stringResource(R.string.trend_approaching) to DangerOrange
-        StormTrend.RETREATING  -> stringResource(R.string.trend_retreating)  to SafeGreen
-        StormTrend.STABLE      -> stringResource(R.string.trend_stable)      to CautionYellow
-        StormTrend.UNKNOWN     -> stringResource(R.string.trend_unknown)     to StormBorder
+    val lastDistance = distancesKm.lastOrNull() ?: 0.0
+    val (label, borderColor) = when (displayTrend(trend, lastDistance)) {
+        TrendDisplay.APPROACHING  -> stringResource(R.string.trend_approaching)  to DangerOrange
+        TrendDisplay.RETREATING   -> stringResource(R.string.trend_retreating)   to SafeGreen
+        TrendDisplay.STABLE       -> stringResource(R.string.trend_stable)       to CautionYellow
+        TrendDisplay.STILL_CLOSE  -> stringResource(R.string.trend_still_close)  to DangerOrange
+        TrendDisplay.UNKNOWN      -> stringResource(R.string.trend_unknown)      to StormBorder
     }
 
     Card(

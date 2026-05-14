@@ -16,18 +16,57 @@ enum class SafetyLevel { EXTREME_DANGER, DANGER, CAUTION, LOW_RISK }
 enum class StormTrend { APPROACHING, RETREATING, STABLE, UNKNOWN }
 
 /**
+ * What the UI should display for the trend card.
+ *
+ * STILL_CLOSE overrides RETREATING/STABLE when the storm is still in the danger zone —
+ * a small distance change at 2 km is within measurement noise, and reading "retreating"
+ * as "safe" can be deadly. APPROACHING is never overridden: a warning that things are
+ * getting worse is always honest.
+ */
+enum class TrendDisplay { APPROACHING, RETREATING, STABLE, STILL_CLOSE, UNKNOWN }
+
+/** Below this distance, the storm is considered "close" — noise floor rises, trend gets overridden. */
+const val TREND_CLOSE_THRESHOLD_KM: Double = 6.0
+/** Noise floor when storm is far: small distance changes are still meaningful. */
+const val TREND_NOISE_FAR_KM: Double = 0.3
+/** Noise floor when storm is close: Blitzortung accuracy + sound-speed variance demand a larger delta. */
+const val TREND_NOISE_CLOSE_KM: Double = 1.0
+
+/**
  * Derives trend from a list of distance-km values collected in one session.
  * Needs at least 2 measurements; uses the window of the last 3.
- * Threshold 0.3 km avoids noise from measurement imprecision.
+ *
+ * The noise floor scales with distance: 0.3 km when far (>6 km), 1.0 km when close.
+ * Lightning location is inherently imprecise — at 2 km, a 0.3 km swing is well within
+ * Blitzortung's typical error, so calling it "retreating" would be over-claiming.
  */
 fun getStormTrend(distancesKm: List<Double>): StormTrend {
     if (distancesKm.size < 2) return StormTrend.UNKNOWN
     val window = distancesKm.takeLast(3)
+    val delta = window.last() - window.first()
+    val noiseFloor = if (window.last() < TREND_CLOSE_THRESHOLD_KM) TREND_NOISE_CLOSE_KM else TREND_NOISE_FAR_KM
     return when {
-        window.last() - window.first() < -0.3 -> StormTrend.APPROACHING
-        window.last() - window.first() >  0.3 -> StormTrend.RETREATING
-        else                                   -> StormTrend.STABLE
+        delta < -noiseFloor -> StormTrend.APPROACHING
+        delta >  noiseFloor -> StormTrend.RETREATING
+        else                -> StormTrend.STABLE
     }
+}
+
+/**
+ * Resolves the trend card label given raw trend and the latest measured distance.
+ * Pure decision logic so the UI doesn't decide safety messaging itself.
+ *
+ * RETREATING/STABLE collapse to STILL_CLOSE when last distance is in the danger zone:
+ * we never want a green/yellow signal to contradict a red safety card.
+ */
+fun displayTrend(trend: StormTrend, lastDistanceKm: Double): TrendDisplay = when (trend) {
+    StormTrend.UNKNOWN     -> TrendDisplay.UNKNOWN
+    StormTrend.APPROACHING -> TrendDisplay.APPROACHING
+    StormTrend.RETREATING,
+    StormTrend.STABLE      ->
+        if (lastDistanceKm < TREND_CLOSE_THRESHOLD_KM) TrendDisplay.STILL_CLOSE
+        else if (trend == StormTrend.RETREATING) TrendDisplay.RETREATING
+        else TrendDisplay.STABLE
 }
 
 fun getSafetyInfo(distanceKm: Double): SafetyInfo = when {
