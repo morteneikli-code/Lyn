@@ -3,6 +3,15 @@
     <string name="app_name">Lyn</string>
     <string name="app_subtitle">Lightning Distance Tracker</string>
 
+    <!-- Disclaimer (shown once on first launch) -->
+    <string name="disclaimer_title">Important</string>
+    <string name="disclaimer_para_what">This app estimates the distance to lightning based on the time between seeing the flash and hearing the thunder.</string>
+    <string name="disclaimer_para_not">It is NOT a substitute for official storm warnings and does not detect incoming lightning on its own.</string>
+    <string name="disclaimer_para_official">For official storm warnings, consult your local meteorological service.</string>
+    <string name="disclaimer_para_emergency">In an emergency, call your local emergency number.</string>
+    <string name="disclaimer_para_responsibility">Use common sense. Seek shelter early. You are responsible for assessing your own safety.</string>
+    <string name="disclaimer_accept">I understand</string>
+
     <!-- Safety tiers (distance-based; thresholds in LightningData.kt) -->
     <string name="safety_overhead_title">Lightning Overhead</string>
     <string name="safety_overhead_advice">Lightning is essentially overhead. Stay in solid shelter. Do not touch plumbing or corded landline phones.</string>

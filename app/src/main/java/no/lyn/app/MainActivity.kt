@@ -52,7 +52,21 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LynTheme {
-                LynApp(database = (application as LynApplication).database)
+                // Disclaimer is a one-time gate. We read the initial state from prefs,
+                // then track acceptance in memory so the next composition flips smoothly
+                // without a full activity recreate.
+                val context = LocalContext.current
+                var accepted by remember {
+                    mutableStateOf(DisclaimerPrefs.isAccepted(context))
+                }
+                if (!accepted) {
+                    DisclaimerScreen(onAccept = {
+                        DisclaimerPrefs.accept(context)
+                        accepted = true
+                    })
+                } else {
+                    LynApp(database = (application as LynApplication).database)
+                }
             }
         }
     }

@@ -2,6 +2,15 @@
 <resources>
     <string name="app_subtitle">Avstandsmåler for lyn og torden</string>
 
+    <!-- Disclaimer (vises én gang ved første oppstart) -->
+    <string name="disclaimer_title">Viktig informasjon</string>
+    <string name="disclaimer_para_what">Appen estimerer avstand til lyn basert på tiden mellom du ser lynet og hører tordenen.</string>
+    <string name="disclaimer_para_not">Den er IKKE en erstatning for offisielle stormvarsler og varsler ikke om kommende lyn på egen hånd.</string>
+    <string name="disclaimer_para_official">For offisielle stormvarsler: yr.no eller Meteorologisk institutt.</string>
+    <string name="disclaimer_para_emergency">I nødssituasjon: ring 110 (brann) eller 112 (politi).</string>
+    <string name="disclaimer_para_responsibility">Bruk sunn fornuft. Oppsøk ly i god tid. Du er selv ansvarlig for å vurdere din egen sikkerhet.</string>
+    <string name="disclaimer_accept">Jeg forstår</string>
+
     <!-- Sikkerhetsnivåer (avstandsbasert; terskler i LightningData.kt) -->
     <string name="safety_overhead_title">Lyn over deg</string>
     <string name="safety_overhead_advice">Lyn er essensielt over deg. Bli i solid ly. Ikke berør rør eller kabeltelefoner.</string>
