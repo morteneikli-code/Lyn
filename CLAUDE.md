@@ -23,7 +23,8 @@ Android app for måling av avstand til tordenvær via flash-til-torden-timer, me
 ```
 app/src/main/java/no/lyn/app/
   MainActivity.kt          Nav-host, tre skjermer: Timer / History / Map
-  LightningData.kt         Pure functions — secondsToKm, getStormTrend, getSafetyInfo
+  LightningData.kt         Pure functions — secondsToKm, getStormTrend, getSafetyInfo, factForMeasurementCount
+  HistoryGrouping.kt       Pure functions — dag-gruppering med eksplisitt TimeZone
   LynApplication.kt        Application-klasse, Room-singleton, osmdroid-init
   LynWidget.kt             Hjemskjerm-widget (SharedPreferences, ikke Room)
   NotificationHelper.kt    Varslingskanal + lokal push-varsling
@@ -43,7 +44,8 @@ res/
 - **Sikkerhetsterskler:** `<3 km` EXTREME · `<6 km` DANGER · `<10 km` CAUTION · ellers LOW_RISK. Definisjoner i `getSafetyInfo()` — ikke dupliser disse tallene andre steder.
 - **Avhengigheter:** legg til i `gradle/libs.versions.toml` → referer via `libs.xxx` i `build.gradle.kts`. Aldri råkoordinater direkte.
 - **Strenger:** ny brukersynlig tekst går i *begge* `values/strings.xml` og `values-nb/strings.xml`.
-- **Pure functions:** logikk uten Android-avhengighet hører hjemme i `LightningData.kt` — da kan den enhetstestes uten emulator.
+- **Pure functions:** logikk uten Android-avhengighet hører hjemme i `LightningData.kt` (fysikk/sikkerhet/fakta) eller en egen pure-funksjons-fil (f.eks. `HistoryGrouping.kt`) — da kan den enhetstestes uten emulator.
+- **Tidssoner:** pure dato-/tidsfunksjoner skal ta `TimeZone` som parameter (default = `getDefault()`). Tester sender alltid eksplisitt sone for å bli deterministiske. Aldri stol på JVM-default i delt logikk.
 
 ---
 
