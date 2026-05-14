@@ -1,8 +1,10 @@
 package no.lyn.app.ui
 
 import android.content.Context
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,20 +12,27 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.ElectricBolt
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.HistoryToggleOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import no.lyn.app.DayCategory
 import no.lyn.app.R
+import no.lyn.app.categorizeDay
 import no.lyn.app.data.AppDatabase
 import no.lyn.app.data.Measurement
 import no.lyn.app.getSafetyInfo
+import no.lyn.app.groupMeasurementsByDay
 import no.lyn.app.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -72,12 +81,39 @@ fun HistoryScreen(database: AppDatabase) {
             SummaryRow(measurements)
             Spacer(Modifier.height(16.dp))
 
+            val context = LocalContext.current
+            // Measurements are already sorted newest-first by DAO; group preserves that order.
+            val groups = remember(measurements) { groupMeasurementsByDay(measurements) }
+            val latestDayKey = groups.firstOrNull()?.first
+            // Track which day-keys are expanded. Latest day starts expanded by default.
+            val expanded = rememberSaveable(
+                saver = androidx.compose.runtime.saveable.listSaver(
+                    save = { it.toList() },
+                    restore = { it.toMutableStateList() },
+                ),
+            ) { mutableStateListOf<String>().also { if (latestDayKey != null) it.add(latestDayKey) } }
+
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(measurements, key = { it.id }) { measurement ->
-                    MeasurementItem(
-                        measurement = measurement,
-                        onDelete = { scope.launch { dao.delete(measurement) } },
-                    )
+                groups.forEach { (dayKey, dayMeasurements) ->
+                    val isExpanded = dayKey in expanded
+                    item(key = "header_$dayKey") {
+                        DayHeader(
+                            label = formatDayLabel(dayMeasurements.first().timestamp, context),
+                            count = dayMeasurements.size,
+                            expanded = isExpanded,
+                            onToggle = {
+                                if (isExpanded) expanded.remove(dayKey) else expanded.add(dayKey)
+                            },
+                        )
+                    }
+                    if (isExpanded) {
+                        items(dayMeasurements, key = { it.id }) { measurement ->
+                            MeasurementItem(
+                                measurement = measurement,
+                                onDelete = { scope.launch { dao.delete(measurement) } },
+                            )
+                        }
+                    }
                 }
                 item { Spacer(Modifier.height(8.dp)) }
             }
@@ -207,6 +243,49 @@ private fun EmptyHistoryState() {
         }
     }
 }
+
+@Composable
+private fun DayHeader(label: String, count: Int, expanded: Boolean, onToggle: () -> Unit) {
+    val rotation by animateFloatAsState(if (expanded) 180f else 0f, label = "chevron")
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(
+            Icons.Filled.ExpandMore,
+            contentDescription = null,
+            tint = LightningYellow,
+            modifier = Modifier
+                .size(20.dp)
+                .rotate(rotation),
+        )
+        Text(
+            label,
+            style = MaterialTheme.typography.titleMedium,
+            color = TextPrimary,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            pluralStringResource(R.plurals.day_measurement_count, count, count),
+            style = MaterialTheme.typography.labelLarge,
+            color = TextSecondary,
+        )
+    }
+}
+
+private fun formatDayLabel(timestamp: Long, context: Context): String =
+    when (categorizeDay(timestamp)) {
+        DayCategory.TODAY     -> context.getString(R.string.day_today)
+        DayCategory.YESTERDAY -> context.getString(R.string.day_yesterday)
+        DayCategory.OTHER     -> SimpleDateFormat("EEEE d. MMMM", Locale.getDefault())
+            .format(Date(timestamp))
+            .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+    }
 
 private fun formatRelativeTime(timestamp: Long, context: Context): String {
     val diff = System.currentTimeMillis() - timestamp

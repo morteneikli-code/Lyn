@@ -2,6 +2,18 @@
 <resources>
     <string name="app_subtitle">Avstandsmåler for lyn og torden</string>
 
+    <!-- Sikkerhetsnivåer (avstandsbasert; terskler i LightningData.kt) -->
+    <string name="safety_overhead_title">Lyn over deg</string>
+    <string name="safety_overhead_advice">Lyn er essensielt over deg. Bli i solid ly. Ikke berør rør eller kabeltelefoner.</string>
+    <string name="safety_very_close_title">Svært nært</string>
+    <string name="safety_very_close_advice">Stormen er rett over deg. Bli i ly. Hold avstand til rør og kabeltelefoner.</string>
+    <string name="safety_close_title">Nært</string>
+    <string name="safety_close_advice">Stormen er nær. Bli i solid ly eller et kjøretøy med hardt tak. Unngå åpne områder, vann og høye trær.</string>
+    <string name="safety_near_title">Storm i området</string>
+    <string name="safety_near_advice">Avslutt utendørsaktiviteter og beveg deg mot ly. Hvis du er hjemme, trekk ut sårbar elektronikk nå.</string>
+    <string name="safety_distant_title">Langt unna</string>
+    <string name="safety_distant_advice">Stormen er langt unna. Hold et øye med den, men ingen umiddelbar handling kreves.</string>
+
     <!-- Timer -->
     <string name="tap_flash">Trykk når du ser LYNET</string>
     <string name="tap_thunder">Trykk når du hører TORDENEN</string>
@@ -20,12 +32,12 @@
     <string name="trend_retreating">Storm trekker seg unna ↓</string>
     <string name="trend_stable">Storm holder avstand →</string>
     <string name="trend_unknown">Mål igjen for å se trenden</string>
+    <string name="trend_still_close">Fortsatt nært — bli i ly</string>
     <string name="trend_last_measurements">Siste målinger</string>
 
     <!-- Navigation -->
     <string name="nav_timer">Måler</string>
     <string name="nav_history">Historikk</string>
-    <string name="nav_map">Kart</string>
 
     <!-- History -->
     <string name="history_clear_title">Slett all historikk?</string>
@@ -44,19 +56,48 @@
     <string name="time_hours_ago">%1$d t siden</string>
     <string name="time_days_ago">%1$d d siden</string>
 
-    <!-- Map -->
-    <string name="map_status_connected">%1$d nedslag / 10 min  •  %2$d totalt (30 min)</string>
-    <string name="map_status_disconnected">Frakoblet fra Blitzortung</string>
-
-    <!-- Notifications -->
+    <!-- Notifications (fyres når egen måling viser at stormen er i faresonen) -->
     <string name="notif_channel_name">Lynvarsler</string>
-    <string name="notif_channel_desc">Varsler når lyn registreres i nærheten</string>
+    <string name="notif_channel_desc">Varsler når målingen din viser at lyn er farlig nært</string>
     <string name="notif_title">⚡ Lyn i nærheten!</string>
-    <string name="notif_text">Lynnedslag %1$s km unna. Søk ly!</string>
+    <string name="notif_text">Målingen din viser %1$s km unna. Søk ly!</string>
 
     <!-- Widget -->
     <string name="widget_description">Viser siste lynmåling</string>
     <string name="widget_measure">Mål lyn</string>
     <string name="widget_last">siste måling</string>
     <string name="widget_tap">Trykk for å åpne</string>
+
+    <!-- Live timer (while counting between flash and thunder) -->
+    <string name="live_timer_waiting">Teller…</string>
+
+    <!-- History day grouping -->
+    <string name="day_today">I dag</string>
+    <string name="day_yesterday">I går</string>
+    <plurals name="day_measurement_count">
+        <item quantity="one">%1$d måling</item>
+        <item quantity="other">%1$d målinger</item>
+    </plurals>
+
+    <!-- Lynfakta -->
+    <string name="fact_strikes_per_second_title">100 nedslag i sekundet</string>
+    <string name="fact_strikes_per_second_body">Jorda treffes av lyn rundt 100 ganger hvert sekund — det blir omtrent 8 millioner nedslag per døgn.</string>
+    <string name="fact_hotter_than_sun_title">Varmere enn sola</string>
+    <string name="fact_hotter_than_sun_body">Ett lynnedslag kan varme opp lufta rundt seg til 30 000 °C — fem ganger så varmt som overflaten på sola.</string>
+    <string name="fact_thin_but_long_title">Knivtynt, men kilometerlangt</string>
+    <string name="fact_thin_but_long_body">Selve lynkanalen er bare 2–3 cm bred, men kan strekke seg 3–5 km eller mer gjennom lufta.</string>
+    <string name="fact_thirty_thirty_title">30/30-regelen</string>
+    <string name="fact_thirty_thirty_body">Hvis tordenen kommer mindre enn 30 sekunder etter lynet — søk ly. Vent 30 minutter etter siste tordenbrak før du går ut igjen.</string>
+    <string name="fact_cars_safe_title">Biler er overraskende trygge</string>
+    <string name="fact_cars_safe_body">En bil med hardt tak er et bra ly — ikke på grunn av gummidekkene, men fordi metallkarosseriet leder strømmen rundt passasjerene.</string>
+    <string name="fact_same_place_title">Samme sted to ganger? Absolutt</string>
+    <string name="fact_same_place_body">Empire State Building treffes av lyn 20–25 ganger i året. Høye bygg blir truffet om og om igjen.</string>
+    <string name="fact_ozone_title">Lyn lager ozon</string>
+    <string name="fact_ozone_body">Den enorme energien i et lynnedslag splitter nitrogen- og oksygenmolekyler, som så slår seg sammen til ozon (O₃).</string>
+    <string name="fact_heat_lightning_title">«Varmelyn» er en myte</string>
+    <string name="fact_heat_lightning_body">Varmelyn finnes ikke. Det du ser er vanlig lyn fra en storm som er for langt unna til at du hører tordenen.</string>
+    <string name="fact_upward_title">Lyn går også oppover</string>
+    <string name="fact_upward_body">Lyn slår ikke bare nedover. Oppoverlyn, der nedslaget går fra bakken opp til skya, er vanlig fra høye konstruksjoner.</string>
+    <string name="fact_rubber_shoes_title">Gummisko hjelper ikke</string>
+    <string name="fact_rubber_shoes_body">Gummisåler gir så å si null beskyttelse mot lyn. Med milliarder av volt involvert spiller noen millimeter gummi ingen rolle.</string>
 </resources>

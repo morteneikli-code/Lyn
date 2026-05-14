@@ -1,57 +1,76 @@
-# Learnings — [Project Name]
+# Learnings — Lyn
 
-**Purpose:** Capture discoveries, mistakes, and lessons as they happen. This is Pillar 6: Continuous Learning.
+**Formål:** Fang opp oppdagelser, feil og lærdommer mens de skjer. Dette er Pillar 6: Continuous Learning.
 
-**When to add an entry:**
-- Claude got something wrong → fix it AND write it here
-- You discovered a pattern that surprised you
-- Something took longer than expected because of a gotcha
-- A skill was updated because it gave wrong guidance
-
----
-
-## Format
-
-```markdown
-### YYYY-MM-DD: [Short title]
-
-**Context:** What were you trying to do?
-**What happened:** What went wrong or what was surprising?
-**Root cause:** Why did it happen?
-**Fix:** What you changed (code, skill, CLAUDE.md)
-**Skill updated:** [skill-name] or "new skill created: [name]"
-```
+**Når du legger til en entry:**
+- Claude tok feil → fiks det OG skriv det her
+- Du oppdaget et mønster som overrasket deg
+- Noe tok lengre tid enn forventet på grunn av en gotcha
+- En skill ble oppdatert fordi den ga feil veiledning
 
 ---
 
 ## Entries
 
-<!-- Add newest entries at the top -->
+### 2026-05-12: Pillar 5-brudd — direkte commits til main
 
-### [Date]: First entry
+**Context:** Oppsett av prosjekt og SDD-rammeverk første dag
+**Hva skjedde:** Alle commits gikk direkte til `main`, ikke via feature-branch og PR
+**Rotårsak:** Pillar 5 (Process Discipline) ikke fulgt — "no direct commits to main, ever"
+**Fix:** Pre-commit hook satt opp. Fra nå: feature-branch → PR → merge
+**Skill oppdatert:** Ingen — `github-workflow`-skillens regler er allerede klare
 
-**Context:** Just installed SDD Workshop Boost
-**What happened:** —
-**Root cause:** —
-**Fix:** —
-**Skill updated:** —
+---
+
+### 2026-05-12: osmdroid krever deprecated PreferenceManager
+
+**Context:** Kompilatorvarsel i LynApplication.kt ved første bygg
+**Hva skjedde:** `@Suppress("DEPRECATION")` er nødvendig for osmdroid-konfigurasjon
+**Rotårsak:** `osmdroid.Configuration.load()` krever `PreferenceManager.getDefaultSharedPreferences()` som er deprecated fra API 29. osmdroid har ikke oppdatert APIen.
+**Fix:** Suppressionen er korrekt og skal beholdes — dokumentert i CLAUDE.md
+**Skill oppdatert:** Lagt til som kritisk gotcha i CLAUDE.md
+
+---
+
+### 2026-05-12: Widget bruker SharedPreferences, ikke Room
+
+**Context:** Analyse av widget-koden under feature-gjennomgang
+**Hva skjedde:** Widgeten oppdateres ikke automatisk fra databasen
+**Rotårsak:** `AppWidgetProvider` har ikke livssyklus-tilgang til Room. `LynWidget` bruker SharedPreferences som bro — `onMeasurementSaved()` må kalles eksplisitt etter hver lagret måling.
+**Fix:** Dokumentert som kritisk gotcha i CLAUDE.md
+**Skill oppdatert:** Lagt til i CLAUDE.md
+
+---
+
+### 2026-05-12: Launcher-ikoner ikke committet i repoet
+
+**Context:** `processDebugResources` feilet under første testrun etter SDK-installasjon
+**Hva skjedde:** AAPT-feil — `mipmap/ic_launcher` og `ic_launcher_round` fantes ikke i repoet
+**Rotårsak:** Android Studio genererer ikoner lokalt ved prosjektopprettelse, men de ble aldri lagt til git
+**Fix:** Opprettet `mipmap-anydpi-v26/` med adaptive XML + PNG-fallbacks for alle densiteter, committet dem
+**Skill oppdatert:** Lagt til som prosjekt-gotcha i CLAUDE.md
+
+---
+
+### 2026-05-12: `dp`-import ikke med i wildcard-import
+
+**Context:** Kompileringsfeil ved første bygge-forsøk
+**Hva skjedde:** "Unresolved reference 'dp'" i `MainActivity.kt`
+**Rotårsak:** `androidx.compose.ui.unit.dp` trekkes ikke inn via `foundation.layout.*` — må importeres eksplisitt
+**Fix:** La til `import androidx.compose.ui.unit.dp` i `MainActivity.kt`
+**Skill oppdatert:** Lagt til som kritisk gotcha i CLAUDE.md
 
 ---
 
 ## Skill Update Backlog
 
-When a lesson suggests a skill needs updating but you don't have time right now:
-
-| Date | Skill | What needs updating |
-|------|-------|---------------------|
-| | | |
+| Dato | Skill | Hva som trenger oppdatering |
+|------|-------|------------------------------|
 
 ---
 
-## Patterns Noticed
+## Mønstre vi har sett
 
-When the same type of issue appears more than once — candidate for a new skill:
-
-| Pattern | Seen how many times | Skill candidate? |
-|---------|---------------------|-----------------|
-| | | |
+| Mønster | Sett antall ganger | Skill-kandidat? |
+|---------|-------------------|-----------------|
+test

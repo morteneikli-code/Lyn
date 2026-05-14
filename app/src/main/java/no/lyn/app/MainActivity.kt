@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -39,10 +38,12 @@ import no.lyn.app.ui.theme.*
 sealed class Screen(val route: String, val labelRes: Int, val icon: ImageVector) {
     object Timer   : Screen("timer",   R.string.nav_timer,   Icons.Filled.ElectricBolt)
     object History : Screen("history", R.string.nav_history, Icons.Filled.History)
-    object Map     : Screen("map",     R.string.nav_map,     Icons.Filled.Map)
 }
 
-val screens = listOf(Screen.Timer, Screen.History, Screen.Map)
+val screens = listOf(Screen.Timer, Screen.History)
+
+/** Threshold for firing a "still close" notification (VERY_CLOSE and below — 2 km). */
+private const val ALERT_DISTANCE_THRESHOLD_KM = VERY_CLOSE_THRESHOLD_KM
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -148,6 +149,9 @@ fun LynApp(database: AppDatabase) {
                                     )
                                 )
                                 LynWidget.onMeasurementSaved(context, dist)
+                                if (dist < ALERT_DISTANCE_THRESHOLD_KM) {
+                                    NotificationHelper.notifyNearbyStrike(context, dist)
+                                }
                             }
                         }
                     },
@@ -160,9 +164,6 @@ fun LynApp(database: AppDatabase) {
             }
             composable(Screen.History.route) {
                 HistoryScreen(database = database)
-            }
-            composable(Screen.Map.route) {
-                MapScreen()
             }
         }
     }

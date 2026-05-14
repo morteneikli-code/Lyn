@@ -14,7 +14,8 @@ val LightningGold = Color(0xFFFFA500)
 val ElectricBlue = Color(0xFF4FC3F7)
 val ElectricPurple = Color(0xFFBB86FC)
 
-// Safety zone colors
+// Safety zone colors (5 tiers — deepest crimson reserved for OVERHEAD)
+val CrimsonRed = Color(0xFFCC0000)
 val DangerRed = Color(0xFFFF4444)
 val DangerOrange = Color(0xFFFF8C00)
 val CautionYellow = Color(0xFFFFD60A)

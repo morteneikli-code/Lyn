@@ -5,10 +5,9 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import kotlinx.coroutines.delay
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.Refresh
@@ -88,7 +87,7 @@ fun TimerScreen(
                 }
             }
 
-            FactsSection()
+            FactsSection(measurementCount = sessionDistances.size)
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -188,6 +187,15 @@ fun TimerSection(
             }
         }
 
+        // Live counter under the button while waiting for thunder
+        AnimatedVisibility(
+            visible = isWaiting,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            LiveCountUp(startMillis = flashTime)
+        }
+
         AnimatedVisibility(visible = elapsedSeconds != null || isWaiting) {
             OutlinedButton(
                 onClick = onReset,
@@ -249,7 +257,7 @@ fun ResultCard(seconds: Double, distanceKm: Double) {
                         R.string.share_text,
                         "%.1f".format(seconds),
                         "%.1f".format(distanceKm),
-                        "${safety.emoji} ${safety.title}",
+                        "${safety.emoji} ${context.getString(safety.titleRes)}",
                     )
                     context.startActivity(
                         Intent.createChooser(
@@ -283,11 +291,13 @@ fun ResultMetric(value: String, unit: String, label: String, color: Color) {
 @Composable
 fun StormTrendCard(distancesKm: List<Double>) {
     val trend = getStormTrend(distancesKm)
-    val (label, borderColor) = when (trend) {
-        StormTrend.APPROACHING -> stringResource(R.string.trend_approaching) to DangerOrange
-        StormTrend.RETREATING  -> stringResource(R.string.trend_retreating)  to SafeGreen
-        StormTrend.STABLE      -> stringResource(R.string.trend_stable)      to CautionYellow
-        StormTrend.UNKNOWN     -> stringResource(R.string.trend_unknown)     to StormBorder
+    val lastDistance = distancesKm.lastOrNull() ?: 0.0
+    val (label, borderColor) = when (displayTrend(trend, lastDistance)) {
+        TrendDisplay.APPROACHING  -> stringResource(R.string.trend_approaching)  to DangerOrange
+        TrendDisplay.RETREATING   -> stringResource(R.string.trend_retreating)   to SafeGreen
+        TrendDisplay.STABLE       -> stringResource(R.string.trend_stable)       to CautionYellow
+        TrendDisplay.STILL_CLOSE  -> stringResource(R.string.trend_still_close)  to DangerOrange
+        TrendDisplay.UNKNOWN      -> stringResource(R.string.trend_unknown)      to StormBorder
     }
 
     Card(
@@ -349,45 +359,72 @@ fun SafetyCard(safetyInfo: SafetyInfo) {
             ) {
                 ColorDot(color = safetyInfo.color, size = 12.dp)
                 Text(
-                    "${safetyInfo.emoji} ${safetyInfo.title}",
+                    "${safetyInfo.emoji} ${stringResource(safetyInfo.titleRes)}",
                     style = MaterialTheme.typography.titleMedium,
                     color = safetyInfo.color,
                     fontWeight = FontWeight.Bold,
                 )
             }
             Spacer(Modifier.height(10.dp))
-            Text(safetyInfo.advice, style = MaterialTheme.typography.bodyMedium, color = TextPrimary, lineHeight = 22.sp)
+            Text(
+                stringResource(safetyInfo.adviceRes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextPrimary,
+                lineHeight = 22.sp,
+            )
         }
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+/**
+ * Live count-up shown under the button while waiting for thunder.
+ * Ticks every 100 ms; one-decimal display keeps motion smooth without feeling jittery.
+ */
 @Composable
-fun FactsSection() {
-    val pagerState = rememberPagerState(pageCount = { LIGHTNING_FACTS.size })
+fun LiveCountUp(startMillis: Long?) {
+    if (startMillis == null) return
+    var elapsed by remember(startMillis) { mutableStateOf(0.0) }
+    LaunchedEffect(startMillis) {
+        while (true) {
+            elapsed = (System.currentTimeMillis() - startMillis) / 1000.0
+            delay(100)
+        }
+    }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "%.1f s".format(Locale.getDefault(), elapsed),
+            style = MaterialTheme.typography.displaySmall,
+            color = LightningGold,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            stringResource(R.string.live_timer_waiting),
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextSecondary,
+        )
+    }
+}
+
+/**
+ * Shows one lightning fact at a time. Rotates by measurementCount so a fresh fact
+ * appears after each completed measurement, cycling through LIGHTNING_FACTS.
+ */
+@Composable
+fun FactsSection(measurementCount: Int) {
+    val fact = factForMeasurementCount(measurementCount) ?: return
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(stringResource(R.string.section_facts), style = MaterialTheme.typography.titleMedium, color = TextSecondary, fontWeight = FontWeight.SemiBold)
-
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = PaddingValues(end = 40.dp),
-            pageSpacing = 12.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) { page -> FactCard(fact = LIGHTNING_FACTS[page]) }
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-            repeat(LIGHTNING_FACTS.size) { index ->
-                val isSelected = pagerState.currentPage == index
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 3.dp)
-                        .size(if (isSelected) 8.dp else 5.dp)
-                        .clip(CircleShape)
-                        .background(if (isSelected) LightningYellow else StormBorder),
-                )
-            }
-        }
+        Text(
+            stringResource(R.string.section_facts),
+            style = MaterialTheme.typography.titleMedium,
+            color = TextSecondary,
+            fontWeight = FontWeight.SemiBold,
+        )
+        AnimatedContent(
+            targetState = fact,
+            transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(200)) },
+            label = "fact",
+        ) { current -> FactCard(fact = current) }
     }
 }
 
@@ -402,10 +439,20 @@ fun FactCard(fact: LightningFact) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(fact.icon, fontSize = 28.sp)
-                Text(fact.title, style = MaterialTheme.typography.titleMedium, color = LightningYellow, fontWeight = FontWeight.SemiBold)
+                Text(
+                    stringResource(fact.titleRes),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = LightningYellow,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
             Spacer(Modifier.height(8.dp))
-            Text(fact.body, style = MaterialTheme.typography.bodyMedium, color = TextPrimary, lineHeight = 21.sp)
+            Text(
+                stringResource(fact.bodyRes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextPrimary,
+                lineHeight = 21.sp,
+            )
         }
     }
 }
