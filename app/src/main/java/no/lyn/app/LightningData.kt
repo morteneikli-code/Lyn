@@ -64,57 +64,30 @@ fun getSafetyInfo(distanceKm: Double): SafetyInfo = when {
 /** Speed of sound ≈ 343 m/s → 1 km per ~2.915 s */
 fun secondsToKm(seconds: Double): Double = seconds / 2.915
 
-data class LightningFact(val title: String, val body: String, val icon: String)
+data class LightningFact(val titleRes: Int, val bodyRes: Int, val icon: String)
+
+/**
+ * Picks the fact to display given how many measurements have been made this session.
+ * Cycles through LIGHTNING_FACTS so a new fact appears after each measurement,
+ * and wraps back to the first fact once the list is exhausted.
+ *
+ * Returns null if the fact list is empty (defensive — currently never the case).
+ */
+fun factForMeasurementCount(count: Int): LightningFact? {
+    if (LIGHTNING_FACTS.isEmpty()) return null
+    val normalized = count.mod(LIGHTNING_FACTS.size) // mod is always non-negative in Kotlin
+    return LIGHTNING_FACTS[normalized]
+}
 
 val LIGHTNING_FACTS = listOf(
-    LightningFact(
-        "100 Strikes Per Second",
-        "Earth is hit by lightning roughly 100 times every second — that's about 8 million strikes per day worldwide.",
-        "⚡",
-    ),
-    LightningFact(
-        "Hotter Than the Sun",
-        "A single lightning bolt can heat the surrounding air to 30,000 °C — five times hotter than the surface of the sun.",
-        "🌡️",
-    ),
-    LightningFact(
-        "Razor-Thin but Kilometres Long",
-        "A lightning channel is only 2–3 cm wide, yet can stretch 3–5 km or more through the sky.",
-        "📏",
-    ),
-    LightningFact(
-        "The 30/30 Rule",
-        "If thunder follows a flash in under 30 seconds, seek shelter. Wait 30 minutes after the last clap before going back outside.",
-        "⏱️",
-    ),
-    LightningFact(
-        "Cars Are Surprisingly Safe",
-        "A hard-topped car is a good shelter — not because of the rubber tyres, but because the metal body conducts electricity around the passengers.",
-        "🚗",
-    ),
-    LightningFact(
-        "Same Place Twice? Absolutely",
-        "The Empire State Building is struck by lightning about 20–25 times per year. Tall structures get hit repeatedly.",
-        "🗼",
-    ),
-    LightningFact(
-        "Lightning Creates Ozone",
-        "The massive energy of a lightning bolt splits nitrogen and oxygen molecules, which then recombine to form ozone (O₃).",
-        "🌿",
-    ),
-    LightningFact(
-        "\"Heat Lightning\" Is a Myth",
-        "There is no such thing as heat lightning. What you see is regular lightning from a storm too far away to hear its thunder.",
-        "🌅",
-    ),
-    LightningFact(
-        "Upward Lightning Exists",
-        "Lightning doesn't only travel downward. Upward lightning, where the bolt travels from the ground up to a cloud, is common from tall structures.",
-        "⬆️",
-    ),
-    LightningFact(
-        "Rubber Shoes Don't Help",
-        "Rubber-soled shoes provide essentially zero protection against lightning. The billions of volts involved make a few mm of rubber irrelevant.",
-        "👟",
-    ),
+    LightningFact(R.string.fact_strikes_per_second_title, R.string.fact_strikes_per_second_body, "⚡"),
+    LightningFact(R.string.fact_hotter_than_sun_title,    R.string.fact_hotter_than_sun_body,    "🌡️"),
+    LightningFact(R.string.fact_thin_but_long_title,      R.string.fact_thin_but_long_body,      "📏"),
+    LightningFact(R.string.fact_thirty_thirty_title,      R.string.fact_thirty_thirty_body,      "⏱️"),
+    LightningFact(R.string.fact_cars_safe_title,          R.string.fact_cars_safe_body,          "🚗"),
+    LightningFact(R.string.fact_same_place_title,         R.string.fact_same_place_body,         "🗼"),
+    LightningFact(R.string.fact_ozone_title,              R.string.fact_ozone_body,              "🌿"),
+    LightningFact(R.string.fact_heat_lightning_title,     R.string.fact_heat_lightning_body,     "🌅"),
+    LightningFact(R.string.fact_upward_title,             R.string.fact_upward_body,             "⬆️"),
+    LightningFact(R.string.fact_rubber_shoes_title,       R.string.fact_rubber_shoes_body,       "👟"),
 )
