@@ -2,6 +2,18 @@
 <resources>
     <string name="app_subtitle">Avstandsmåler for lyn og torden</string>
 
+    <!-- Sikkerhetsnivåer (avstandsbasert; terskler i LightningData.kt) -->
+    <string name="safety_overhead_title">Lyn over deg</string>
+    <string name="safety_overhead_advice">Lyn er essensielt over deg. Bli i solid ly. Ikke berør rør eller kabeltelefoner.</string>
+    <string name="safety_very_close_title">Svært nært</string>
+    <string name="safety_very_close_advice">Stormen er rett over deg. Bli i ly. Hold avstand til rør og kabeltelefoner.</string>
+    <string name="safety_close_title">Nært</string>
+    <string name="safety_close_advice">Stormen er nær. Bli i solid ly eller et kjøretøy med hardt tak. Unngå åpne områder, vann og høye trær.</string>
+    <string name="safety_near_title">Storm i området</string>
+    <string name="safety_near_advice">Avslutt utendørsaktiviteter og beveg deg mot ly. Hvis du er hjemme, trekk ut sårbar elektronikk nå.</string>
+    <string name="safety_distant_title">Langt unna</string>
+    <string name="safety_distant_advice">Stormen er langt unna. Hold et øye med den, men ingen umiddelbar handling kreves.</string>
+
     <!-- Timer -->
     <string name="tap_flash">Trykk når du ser LYNET</string>
     <string name="tap_thunder">Trykk når du hører TORDENEN</string>

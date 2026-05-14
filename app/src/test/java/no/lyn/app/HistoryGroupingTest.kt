@@ -23,7 +23,7 @@ class HistoryGroupingTest {
         timestamp = osloTime(iso),
         seconds = 1.0,
         distanceKm = 1.0,
-        safetyLevel = SafetyLevel.LOW_RISK,
+        safetyLevel = SafetyLevel.DISTANT,
     )
 
     // ─── dayKey ──────────────────────────────────────────────────────────────────

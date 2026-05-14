@@ -24,47 +24,62 @@ class LightningDataTest {
         assertEquals(0.5, secondsToKm(1.4575), 0.0001)
     }
 
-    // ─── getSafetyInfo — boundary behaviour ──────────────────────────────────────
-    // Thresholds use strict `<`, so the boundary value belongs to the NEXT (safer) tier.
+    // ─── getSafetyInfo — five-tier boundary behaviour ────────────────────────────
+    // Tiers grounded in NATA / NOAA guidance, calibrated for proportionality.
+    // Thresholds use strict `<`, so each boundary value belongs to the NEXT (safer) tier.
 
     @Test
-    fun `getSafetyInfo at 0 km is extreme danger`() {
-        assertEquals(SafetyLevel.EXTREME_DANGER, getSafetyInfo(0.0).level)
+    fun `getSafetyInfo at 0 km is overhead`() {
+        assertEquals(SafetyLevel.OVERHEAD, getSafetyInfo(0.0).level)
     }
 
     @Test
-    fun `getSafetyInfo just below 3 km is extreme danger`() {
-        assertEquals(SafetyLevel.EXTREME_DANGER, getSafetyInfo(2.99).level)
+    fun `getSafetyInfo just below 1 km is overhead`() {
+        assertEquals(SafetyLevel.OVERHEAD, getSafetyInfo(0.99).level)
     }
 
     @Test
-    fun `getSafetyInfo at exactly 3 km is danger`() {
-        assertEquals(SafetyLevel.DANGER, getSafetyInfo(3.0).level)
+    fun `getSafetyInfo at exactly 1 km is very close`() {
+        assertEquals(SafetyLevel.VERY_CLOSE, getSafetyInfo(1.0).level)
     }
 
     @Test
-    fun `getSafetyInfo just below 6 km is danger`() {
-        assertEquals(SafetyLevel.DANGER, getSafetyInfo(5.99).level)
+    fun `getSafetyInfo just below 2 km is very close`() {
+        assertEquals(SafetyLevel.VERY_CLOSE, getSafetyInfo(1.99).level)
     }
 
     @Test
-    fun `getSafetyInfo at exactly 6 km is caution`() {
-        assertEquals(SafetyLevel.CAUTION, getSafetyInfo(6.0).level)
+    fun `getSafetyInfo at exactly 2 km is close`() {
+        assertEquals(SafetyLevel.CLOSE, getSafetyInfo(2.0).level)
     }
 
     @Test
-    fun `getSafetyInfo just below 10 km is caution`() {
-        assertEquals(SafetyLevel.CAUTION, getSafetyInfo(9.99).level)
+    fun `getSafetyInfo at 4 km is close`() {
+        // The user's specific complaint: 2.5 km used to be "EXTREME_DANGER", which over-claimed.
+        // Mid-range close is now just CLOSE — same tier as 5 km. Pin this so it doesn't drift back.
+        assertEquals(SafetyLevel.CLOSE, getSafetyInfo(2.5).level)
+        assertEquals(SafetyLevel.CLOSE, getSafetyInfo(4.0).level)
+        assertEquals(SafetyLevel.CLOSE, getSafetyInfo(5.99).level)
     }
 
     @Test
-    fun `getSafetyInfo at exactly 10 km is low risk`() {
-        assertEquals(SafetyLevel.LOW_RISK, getSafetyInfo(10.0).level)
+    fun `getSafetyInfo at exactly 6 km is near`() {
+        assertEquals(SafetyLevel.NEAR, getSafetyInfo(6.0).level)
     }
 
     @Test
-    fun `getSafetyInfo far away is low risk`() {
-        assertEquals(SafetyLevel.LOW_RISK, getSafetyInfo(100.0).level)
+    fun `getSafetyInfo just below 10 km is near`() {
+        assertEquals(SafetyLevel.NEAR, getSafetyInfo(9.99).level)
+    }
+
+    @Test
+    fun `getSafetyInfo at exactly 10 km is distant`() {
+        assertEquals(SafetyLevel.DISTANT, getSafetyInfo(10.0).level)
+    }
+
+    @Test
+    fun `getSafetyInfo far away is distant`() {
+        assertEquals(SafetyLevel.DISTANT, getSafetyInfo(100.0).level)
     }
 
     // ─── getStormTrend ───────────────────────────────────────────────────────────

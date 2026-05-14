@@ -257,7 +257,7 @@ fun ResultCard(seconds: Double, distanceKm: Double) {
                         R.string.share_text,
                         "%.1f".format(seconds),
                         "%.1f".format(distanceKm),
-                        "${safety.emoji} ${safety.title}",
+                        "${safety.emoji} ${context.getString(safety.titleRes)}",
                     )
                     context.startActivity(
                         Intent.createChooser(
@@ -359,14 +359,19 @@ fun SafetyCard(safetyInfo: SafetyInfo) {
             ) {
                 ColorDot(color = safetyInfo.color, size = 12.dp)
                 Text(
-                    "${safetyInfo.emoji} ${safetyInfo.title}",
+                    "${safetyInfo.emoji} ${stringResource(safetyInfo.titleRes)}",
                     style = MaterialTheme.typography.titleMedium,
                     color = safetyInfo.color,
                     fontWeight = FontWeight.Bold,
                 )
             }
             Spacer(Modifier.height(10.dp))
-            Text(safetyInfo.advice, style = MaterialTheme.typography.bodyMedium, color = TextPrimary, lineHeight = 22.sp)
+            Text(
+                stringResource(safetyInfo.adviceRes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextPrimary,
+                lineHeight = 22.sp,
+            )
         }
     }
 }

@@ -1,17 +1,33 @@
 package no.lyn.app
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import no.lyn.app.ui.theme.*
 
 data class SafetyInfo(
     val level: SafetyLevel,
-    val title: String,
-    val advice: String,
+    @StringRes val titleRes: Int,
+    @StringRes val adviceRes: Int,
     val color: Color,
     val emoji: String,
 )
 
-enum class SafetyLevel { EXTREME_DANGER, DANGER, CAUTION, LOW_RISK }
+/**
+ * Five tiers grounded in real strike-physics and authoritative guidance.
+ *
+ * The split between OVERHEAD and VERY_CLOSE is the only place we change indoor advice:
+ * close lightning makes plumbing and corded landline phones the realistic indoor hazards.
+ * Regular grounded electronics are not meaningfully more dangerous to unplug at 1 km than
+ * at 5 km — the "don't unplug during a storm" myth is conservative public messaging, not
+ * physics. So we only flag the genuinely risky items, and only when proximity warrants it.
+ */
+enum class SafetyLevel { OVERHEAD, VERY_CLOSE, CLOSE, NEAR, DISTANT }
+
+// Tier thresholds in km — single source of truth.
+const val OVERHEAD_THRESHOLD_KM: Double = 1.0
+const val VERY_CLOSE_THRESHOLD_KM: Double = 2.0
+const val CLOSE_THRESHOLD_KM: Double = 6.0
+const val NEAR_THRESHOLD_KM: Double = 10.0
 
 enum class StormTrend { APPROACHING, RETREATING, STABLE, UNKNOWN }
 
@@ -70,31 +86,38 @@ fun displayTrend(trend: StormTrend, lastDistanceKm: Double): TrendDisplay = when
 }
 
 fun getSafetyInfo(distanceKm: Double): SafetyInfo = when {
-    distanceKm < 3.0 -> SafetyInfo(
-        level = SafetyLevel.EXTREME_DANGER,
-        title = "Extreme Danger",
-        advice = "Seek solid shelter IMMEDIATELY. Do NOT stand under trees, near water, or in open areas. Get inside a building or a hard-topped vehicle now.",
+    distanceKm < OVERHEAD_THRESHOLD_KM -> SafetyInfo(
+        level = SafetyLevel.OVERHEAD,
+        titleRes = R.string.safety_overhead_title,
+        adviceRes = R.string.safety_overhead_advice,
+        color = CrimsonRed,
+        emoji = "🔴",
+    )
+    distanceKm < VERY_CLOSE_THRESHOLD_KM -> SafetyInfo(
+        level = SafetyLevel.VERY_CLOSE,
+        titleRes = R.string.safety_very_close_title,
+        adviceRes = R.string.safety_very_close_advice,
         color = DangerRed,
         emoji = "🔴",
     )
-    distanceKm < 6.0 -> SafetyInfo(
-        level = SafetyLevel.DANGER,
-        title = "Danger — Seek Shelter",
-        advice = "The storm is very close. Move inside immediately. Avoid contact with plumbing, electrical equipment, and windows.",
+    distanceKm < CLOSE_THRESHOLD_KM -> SafetyInfo(
+        level = SafetyLevel.CLOSE,
+        titleRes = R.string.safety_close_title,
+        adviceRes = R.string.safety_close_advice,
         color = DangerOrange,
         emoji = "🟠",
     )
-    distanceKm < 10.0 -> SafetyInfo(
-        level = SafetyLevel.CAUTION,
-        title = "Caution — Be Prepared",
-        advice = "Lightning can still reach you. Apply the 30/30 rule: if thunder follows lightning in under 30 s, seek shelter. Wait 30 min after the last strike.",
+    distanceKm < NEAR_THRESHOLD_KM -> SafetyInfo(
+        level = SafetyLevel.NEAR,
+        titleRes = R.string.safety_near_title,
+        adviceRes = R.string.safety_near_advice,
         color = CautionYellow,
         emoji = "🟡",
     )
     else -> SafetyInfo(
-        level = SafetyLevel.LOW_RISK,
-        title = "Low Risk — Stay Alert",
-        advice = "The storm is relatively far away, but conditions can change quickly. Monitor the situation and be ready to seek shelter.",
+        level = SafetyLevel.DISTANT,
+        titleRes = R.string.safety_distant_title,
+        adviceRes = R.string.safety_distant_advice,
         color = SafeGreen,
         emoji = "🟢",
     )

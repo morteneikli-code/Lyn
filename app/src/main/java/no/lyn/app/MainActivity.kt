@@ -42,8 +42,8 @@ sealed class Screen(val route: String, val labelRes: Int, val icon: ImageVector)
 
 val screens = listOf(Screen.Timer, Screen.History)
 
-/** Threshold for firing a "still close" notification after a measurement (EXTREME_DANGER tier). */
-private const val ALERT_DISTANCE_THRESHOLD_KM = 3.0
+/** Threshold for firing a "still close" notification (VERY_CLOSE and below — 2 km). */
+private const val ALERT_DISTANCE_THRESHOLD_KM = VERY_CLOSE_THRESHOLD_KM
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
